@@ -116,7 +116,26 @@ public class ExplosionEventHandler
         {
             boolean isSmoking = this.fieldIsSmoking.getBoolean(explosion);
             boolean isFlaming = this.fieldIsFlaming.getBoolean(explosion);
-            float explosionSize = this.fieldExplosionSize.getFloat(explosion);
+            float explosionSize;
+
+            if (isCreeper && Configs.modifyCreeperExplosionStrength)
+            {
+                if (((EntityCreeper) explosion.getExplosivePlacedBy()).getPowered())
+                {
+                    explosionSize = (float) Configs.creeperExplosionStrengthCharged;
+                }
+                else
+                {
+                    explosionSize = (float) Configs.creeperExplosionStrengthNormal;
+                }
+
+                this.fieldExplosionSize.setFloat(explosion, explosionSize);
+                System.out.printf("strength: %.2f\n", explosionSize);
+            }
+            else
+            {
+                explosionSize = this.fieldExplosionSize.getFloat(explosion);
+            }
 
             explosion.doExplosionA();
 
@@ -148,12 +167,12 @@ public class ExplosionEventHandler
         }
         catch (IllegalAccessException e)
         {
-            EnvironmentalCreepers.logger.error("IllegalAccessException while reflecting...");
+            EnvironmentalCreepers.logger.error("IllegalAccessException while reflecting explosion fields...");
             e.printStackTrace();
         }
         catch (IllegalArgumentException e)
         {
-            EnvironmentalCreepers.logger.error("IllegalArgumentException while reflecting...");
+            EnvironmentalCreepers.logger.error("IllegalArgumentException while reflecting explosion fields...");
             e.printStackTrace();
         }
 

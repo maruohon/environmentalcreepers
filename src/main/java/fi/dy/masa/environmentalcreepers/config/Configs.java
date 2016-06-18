@@ -15,8 +15,11 @@ public class Configs
     public static boolean disableOtherExplosionItemDamage;
     public static boolean modifyCreeperExplosionDropChance;
     public static boolean modifyOtherExplosionDropChance;
+    public static boolean modifyCreeperExplosionStrength;
     public static double creeperExplosionBlockDropChance;
     public static double otherExplosionBlockDropChance;
+    public static double creeperExplosionStrengthNormal;
+    public static double creeperExplosionStrengthCharged;
 
     public static File configurationFile;
     public static Configuration config;
@@ -77,6 +80,18 @@ public class Configs
         prop = conf.get(CATEGORY_GENERIC, "otherExplosionBlockDropChance", 1.0);
         prop.setComment("The chance of other explosions than Creepers to drop the blocks as items. Set to 1.0 to always drop.");
         otherExplosionBlockDropChance = prop.getDouble();
+
+        prop = conf.get(CATEGORY_GENERIC, "modifyCreeperExplosionStrength", false);
+        prop.setComment("Modify the strength of Creeper explosions.");
+        modifyCreeperExplosionStrength = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_GENERIC, "creeperExplosionStrengthNormal", 3.0);
+        prop.setComment("The strength of Creeper explosions. Default in vanilla: 3.0 for normal Creepers (becomes double ie. 6.0 for Charged Creepers).");
+        creeperExplosionStrengthNormal = prop.getDouble();
+
+        prop = conf.get(CATEGORY_GENERIC, "creeperExplosionStrengthCharged", 6.0);
+        prop.setComment("The strength of Charged Creeper explosions. Default in vanilla: 6.0 (double of normal Creepers).");
+        creeperExplosionStrengthCharged = prop.getDouble();
 
         if (conf.hasChanged() == true)
         {
