@@ -130,7 +130,6 @@ public class ExplosionEventHandler
                 }
 
                 this.fieldExplosionSize.setFloat(explosion, explosionSize);
-                System.out.printf("strength: %.2f\n", explosionSize);
             }
             else
             {

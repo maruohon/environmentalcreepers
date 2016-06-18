@@ -1,10 +1,11 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/environmental-creepers",
     "promos": {
-        "1.9.4-latest": "1.0.0",
-        "1.9.4-recommended": "1.0.0",
+        "1.9.4-latest": "1.1.0",
+        "1.9.4-recommended": "1.1.0",
     },
     "1.9.4": {
+        "1.1.0": "Added config options to modify Creeper explosion strength\nCleaned up some left-over config stuff",
         "1.0.0": "Initial release"
     }
 }
