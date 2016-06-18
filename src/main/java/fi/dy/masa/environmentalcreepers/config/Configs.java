@@ -25,7 +25,6 @@ public class Configs
     public static Configuration config;
     
     public static final String CATEGORY_GENERIC = "Generic";
-    public static final String CATEGORY_INFO_TOGGLE = "InfoTypes";
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
@@ -39,7 +38,7 @@ public class Configs
     public static void loadConfigsFromFile(File configFile)
     {
         configurationFile = configFile;
-        config = new Configuration(configFile, null, true);
+        config = new Configuration(configFile, null, false);
         config.load();
 
         loadConfigs(config);
