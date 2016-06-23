@@ -14,7 +14,7 @@ import fi.dy.masa.environmentalcreepers.proxy.ServerProxy;
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
     guiFactory = "fi.dy.masa.environmentalcreepers.config.EnvironmentalCreepersGuiFactory",
     updateJSON = "https://raw.githubusercontent.com/maruohon/environmentalcreepers/master/update.json",
-    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "1.9.4")
+    acceptableRemoteVersions = "*", acceptedMinecraftVersions = "[1.9.4,1.10]")
 public class EnvironmentalCreepers
 {
     @Instance(Reference.MOD_ID)
