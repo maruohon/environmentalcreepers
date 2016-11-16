@@ -24,6 +24,7 @@ public class EnvironmentalCreepersGuiFactory implements IModGuiFactory
         return null;
     }
 
+    @Deprecated
     @Override
     public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
     {
