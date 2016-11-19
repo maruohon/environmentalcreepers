@@ -211,7 +211,7 @@ public class ExplosionEventHandler
                     double d3 = d0 - pos.xCoord;
                     double d4 = d1 - pos.yCoord;
                     double d5 = d2 - pos.zCoord;
-                    double d6 = MathHelper.sqrt_double(d3 * d3 + d4 * d4 + d5 * d5);
+                    double d6 = MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);
                     d3 = d3 / d6;
                     d4 = d4 / d6;
                     d5 = d5 / d6;
