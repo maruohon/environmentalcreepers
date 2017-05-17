@@ -20,6 +20,7 @@ public class Configs
     public static double otherExplosionBlockDropChance;
     public static double creeperExplosionStrengthNormal;
     public static double creeperExplosionStrengthCharged;
+    public static boolean verboseLogging;
 
     public static File configurationFile;
     public static Configuration config;
@@ -92,7 +93,11 @@ public class Configs
         prop.setComment("The strength of Charged Creeper explosions. Default in vanilla: 6.0 (double of normal Creepers).");
         creeperExplosionStrengthCharged = prop.getDouble();
 
-        if (conf.hasChanged() == true)
+        prop = conf.get(CATEGORY_GENERIC, "verboseLogging", false);
+        prop.setComment("Log some messages on each explosion, for debugging purposes. Leave disabled for normal use.");
+        verboseLogging = prop.getBoolean();
+
+        if (conf.hasChanged())
         {
             conf.save();
         }
