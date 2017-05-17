@@ -70,11 +70,12 @@ public class ExplosionEventHandler
         {
             if (Configs.disableCreeperExplosionItemDamage)
             {
-                this.removeItemEntities(event.getAffectedEntities());
+                this.removeItemEntities(event.getAffectedEntities(), true);
             }
 
             if (Configs.disableCreeperExplosionBlockDamage)
             {
+                EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Creeper'");
                 event.getExplosion().clearAffectedBlockPositions();
             }
         }
@@ -82,18 +83,20 @@ public class ExplosionEventHandler
         {
             if (Configs.disableOtherExplosionItemDamage)
             {
-                this.removeItemEntities(event.getAffectedEntities());
+                this.removeItemEntities(event.getAffectedEntities(), false);
             }
 
             if (Configs.disableOtherExplosionBlockDamage)
             {
+                EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Other'");
                 event.getExplosion().clearAffectedBlockPositions();
             }
         }
     }
 
-    private void removeItemEntities(List<Entity> list)
+    private void removeItemEntities(List<Entity> list, boolean isCreeper)
     {
+        EnvironmentalCreepers.logInfo("ExplosionEventHandler.removeItemEntities() - Type: '{}'", isCreeper ? "Creeper" : "Other");
         Iterator<Entity> iter = list.iterator();
 
         while (iter.hasNext())
@@ -111,6 +114,8 @@ public class ExplosionEventHandler
     {
         World world = event.getWorld();
         Explosion explosion = event.getExplosion();
+
+        EnvironmentalCreepers.logInfo("Replacing the explosion for type '{}'", isCreeper ? "Creeper" : "Other");
 
         try
         {
@@ -166,13 +171,11 @@ public class ExplosionEventHandler
         }
         catch (IllegalAccessException e)
         {
-            EnvironmentalCreepers.logger.error("IllegalAccessException while reflecting explosion fields...");
-            e.printStackTrace();
+            EnvironmentalCreepers.logger.error("IllegalAccessException while reflecting explosion fields", e);
         }
         catch (IllegalArgumentException e)
         {
-            EnvironmentalCreepers.logger.error("IllegalArgumentException while reflecting explosion fields...");
-            e.printStackTrace();
+            EnvironmentalCreepers.logger.error("IllegalArgumentException while reflecting explosion fields", e);
         }
 
         event.setCanceled(true);
@@ -195,6 +198,7 @@ public class ExplosionEventHandler
         }
 
         float dropChance = (float)(isCreeper ? Configs.creeperExplosionBlockDropChance : Configs.otherExplosionBlockDropChance);
+        EnvironmentalCreepers.logInfo("ExplosionEventHandler.doExplosionB() - Type: '{}', drop chance: {}", isCreeper ? "Creeper" : "Other", dropChance);
 
         if (isSmoking)
         {

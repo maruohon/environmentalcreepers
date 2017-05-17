@@ -33,4 +33,12 @@ public class EnvironmentalCreepers
         MinecraftForge.EVENT_BUS.register(new ExplosionEventHandler());
         proxy.registerEventHandlers();
     }
+
+    public static void logInfo(String message, Object ... params)
+    {
+        if (Configs.verboseLogging)
+        {
+            logger.info(message, params);
+        }
+    }
 }
