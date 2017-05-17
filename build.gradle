@@ -12,9 +12,22 @@ buildscript {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+/*
+apply plugin: 'maven'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+repositories {
+    // JEI
+    maven {
+        url "http://dvs1.progwml6.com/files/maven"
+    }
+
+    // ModMaven for Baubles
+    maven {
+        name "ModMaven"
+        url "https://modmaven.k-4u.nl"
+    }
+}
+*/
 
 ext.configFile = file "build.properties"
 
@@ -25,7 +38,16 @@ configFile.withReader {
 }
 
 group = config.group + config.mod_id // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = config.mod_id
+archivesBaseName = config.mod_id + '-' + config.minecraft_version_out
+
+// Need this here so eclipse task generates correctly.
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+compileJava {
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+}
 
 minecraft {
     version = config.minecraft_version + "-" + config.forge_version
@@ -42,19 +64,11 @@ minecraft {
     ext.mod_version = "${config.mod_version}"
 
     if (mod_version.endsWith('-dev')) {
-        mod_version = mod_version + "." + new Date().format('yyyy.MM.dd.HH.mm.ss')
+        mod_version = mod_version + "." + new Date().format('yyyyMMdd.HHmmss')
     }
 
     replaceIn "Reference.java"
-    //replace "@MOD_VERSION@", "${config.mod_version}-${System.getenv("BUILD_NUMBER") ?: 0}"
     replace "@MOD_VERSION@", mod_version
-
-    if (project.hasProperty("mod_signature")) {
-        replace "@FINGERPRINT@", project.mod_signature
-    }
-
-    // For JEI
-    // useDepAts = true
 }
 
 dependencies {
@@ -63,18 +77,14 @@ dependencies {
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
       
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
+    //deobfCompile "mezz.jei:jei_${config.minecraft_version}:${config.jei_version}:api"
 }
 
-//version = "${config.minecraft_version}-${project.minecraft.mod_version}-${System.getenv("BUILD_NUMBER") ?: 0}"
-version = "${config.minecraft_version}-${project.minecraft.mod_version}"
+version = project.minecraft.mod_version
 
 processResources
 {
@@ -85,8 +95,8 @@ processResources
     exclude '**/*.bdc3D'
 
     // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mod_version", project.minecraft.mod_version
+    inputs.property "minecraft_version", project.config.minecraft_version
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
@@ -102,5 +112,13 @@ processResources
     }
 
     // Move access transformers to META-INF
-    // rename '(' + config.mod_id + '_at.cfg)', 'META-INF/$1'
+    rename '(.+_at.cfg)', 'META-INF/$1'
 }
+
+/*
+jar {
+    manifest {
+        attributes 'FMLAT': config.mod_id + '_at.cfg'
+    }
+}
+*/
