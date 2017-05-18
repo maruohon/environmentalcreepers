@@ -15,8 +15,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.network.play.server.SPacketExplosion;
+import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -66,7 +68,9 @@ public class ExplosionEventHandler
     @SubscribeEvent
     public void onExplosionDetonate(ExplosionEvent.Detonate event)
     {
-        if (event.getExplosion().getExplosivePlacedBy() instanceof EntityCreeper)
+        Explosion explosion = event.getExplosion();
+
+        if (explosion.getExplosivePlacedBy() instanceof EntityCreeper)
         {
             if (Configs.disableCreeperExplosionItemDamage)
             {
@@ -76,7 +80,12 @@ public class ExplosionEventHandler
             if (Configs.disableCreeperExplosionBlockDamage)
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Creeper'");
-                event.getExplosion().clearAffectedBlockPositions();
+                explosion.clearAffectedBlockPositions();
+            }
+
+            if (Configs.enableCreeperExplosionChainReaction)
+            {
+                this.causeCreeperChainReaction(event.getWorld(), explosion.getPosition());
             }
         }
         else
@@ -89,7 +98,7 @@ public class ExplosionEventHandler
             if (Configs.disableOtherExplosionBlockDamage)
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Other'");
-                event.getExplosion().clearAffectedBlockPositions();
+                explosion.clearAffectedBlockPositions();
             }
         }
     }
@@ -250,6 +259,26 @@ public class ExplosionEventHandler
                 {
                     world.setBlockState(blockpos, Blocks.FIRE.getDefaultState());
                 }
+            }
+        }
+    }
+
+    private void causeCreeperChainReaction(World world, Vec3d explosionPos)
+    {
+        EnvironmentalCreepers.logInfo("ExplosionEventHandler.causeCreeperChainReaction() - Explosion Position: '{}'", explosionPos);
+
+        double r = Configs.creeperChainReactionMaxDistance;
+        double rSq = r * r;
+        AxisAlignedBB bb = new AxisAlignedBB(explosionPos.addVector(-r, -r, -r), explosionPos.addVector(r, r, r));
+        List<EntityCreeper> list = world.getEntitiesWithinAABB(EntityCreeper.class, bb, EntitySelectors.IS_ALIVE);
+
+        for (EntityCreeper creeper : list)
+        {
+            if (creeper.hasIgnited() == false && world.rand.nextFloat() < Configs.creeperChainReactionChance &&
+                creeper.getDistanceSq(explosionPos.xCoord, explosionPos.yCoord, explosionPos.zCoord) <= rSq)
+            {
+                EnvironmentalCreepers.logInfo("ExplosionEventHandler.causeCreeperChainReaction() - Igniting Creeper: '{}'", creeper.toString());
+                creeper.ignite();
             }
         }
     }
