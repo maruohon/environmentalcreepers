@@ -269,7 +269,9 @@ public class ExplosionEventHandler
 
         double r = Configs.creeperChainReactionMaxDistance;
         double rSq = r * r;
-        AxisAlignedBB bb = new AxisAlignedBB(explosionPos.addVector(-r, -r, -r), explosionPos.addVector(r, r, r));
+        AxisAlignedBB bb = new AxisAlignedBB(
+                explosionPos.xCoord - r, explosionPos.yCoord - r, explosionPos.zCoord - r,
+                explosionPos.xCoord + r, explosionPos.yCoord + r, explosionPos.zCoord + r);
         List<EntityCreeper> list = world.getEntitiesWithinAABB(EntityCreeper.class, bb, EntitySelectors.IS_ALIVE);
 
         for (EntityCreeper creeper : list)
