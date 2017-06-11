@@ -39,9 +39,9 @@ public class ExplosionEventHandler
 
     public ExplosionEventHandler()
     {
-        this.fieldExplosionSize =   ReflectionHelper.findField(Explosion.class, "field_77280_f", "explosionSize");
-        this.fieldIsSmoking =       ReflectionHelper.findField(Explosion.class, "field_82755_b", "isSmoking");
-        this.fieldIsFlaming =       ReflectionHelper.findField(Explosion.class, "field_77286_a", "isFlaming");
+        this.fieldExplosionSize =   ReflectionHelper.findField(Explosion.class, "field_77280_f", "size");
+        this.fieldIsSmoking =       ReflectionHelper.findField(Explosion.class, "field_82755_b", "damagesTerrain");
+        this.fieldIsFlaming =       ReflectionHelper.findField(Explosion.class, "field_77286_a", "causesFire");
     }
 
     @SubscribeEvent
