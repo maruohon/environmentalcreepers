@@ -1,6 +1,8 @@
 {
     "homepage": "http://minecraft.curseforge.com/projects/environmental-creepers",
     "promos": {
+        "1.12-latest": "1.2.0",
+        "1.12-recommended": "1.2.0",
         "1.11.2-latest": "1.2.1",
         "1.11.2-recommended": "1.2.1",
         "1.11-latest": "1.2.1",
@@ -11,6 +13,9 @@
         "1.10-recommended": "1.1.0",
         "1.9.4-latest": "1.1.0",
         "1.9.4-recommended": "1.1.0"
+    },
+    "1.12": {
+        "1.2.0": "Update to Minecraft 1.12"
     },
     "1.11.2": {
         "1.2.1": "Fix using a client-side-only constructor, which then of course crashes on a server",
