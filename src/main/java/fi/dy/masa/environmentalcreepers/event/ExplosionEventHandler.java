@@ -165,10 +165,10 @@ public class ExplosionEventHandler
 
                 for (EntityPlayer player : world.playerEntities)
                 {
-                    if (player.getDistanceSq(pos.xCoord, pos.yCoord, pos.zCoord) < 4096.0D)
+                    if (player.getDistanceSq(pos.x, pos.y, pos.z) < 4096.0D)
                     {
                         ((EntityPlayerMP) player).connection.sendPacket(
-                                new SPacketExplosion(pos.xCoord, pos.yCoord, pos.zCoord, explosionSize,
+                                new SPacketExplosion(pos.x, pos.y, pos.z, explosionSize,
                                         explosion.getAffectedBlockPositions(), explosion.getPlayerKnockbackMap().get(player)));
                     }
                 }
@@ -195,15 +195,15 @@ public class ExplosionEventHandler
         Vec3d pos = explosion.getPosition();
         Random rand = world.rand;
 
-        world.playSound((EntityPlayer)null, pos.xCoord, pos.yCoord, pos.zCoord, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.2F) * 0.7F);
+        world.playSound((EntityPlayer)null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.2F) * 0.7F);
 
         if (explosionSize >= 2.0F && isSmoking)
         {
-            world.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, pos.xCoord, pos.yCoord, pos.zCoord, 1.0D, 0.0D, 0.0D, new int[0]);
+            world.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, pos.x, pos.y, pos.z, 1.0D, 0.0D, 0.0D, new int[0]);
         }
         else
         {
-            world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, pos.xCoord, pos.yCoord, pos.zCoord, 1.0D, 0.0D, 0.0D, new int[0]);
+            world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, pos.x, pos.y, pos.z, 1.0D, 0.0D, 0.0D, new int[0]);
         }
 
         float dropChance = (float)(isCreeper ? Configs.creeperExplosionBlockDropChance : Configs.otherExplosionBlockDropChance);
@@ -221,9 +221,9 @@ public class ExplosionEventHandler
                     double d0 = blockpos.getX() + rand.nextFloat();
                     double d1 = blockpos.getY() + rand.nextFloat();
                     double d2 = blockpos.getZ() + rand.nextFloat();
-                    double d3 = d0 - pos.xCoord;
-                    double d4 = d1 - pos.yCoord;
-                    double d5 = d2 - pos.zCoord;
+                    double d3 = d0 - pos.x;
+                    double d4 = d1 - pos.y;
+                    double d5 = d2 - pos.z;
                     double d6 = MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);
                     d3 = d3 / d6;
                     d4 = d4 / d6;
@@ -233,7 +233,7 @@ public class ExplosionEventHandler
                     d3 = d3 * d7;
                     d4 = d4 * d7;
                     d5 = d5 * d7;
-                    world.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, (d0 + pos.xCoord) / 2.0D, (d1 + pos.yCoord) / 2.0D, (d2 + pos.zCoord) / 2.0D, d3, d4, d5, new int[0]);
+                    world.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, (d0 + pos.x) / 2.0D, (d1 + pos.y) / 2.0D, (d2 + pos.z) / 2.0D, d3, d4, d5, new int[0]);
                     world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, d0, d1, d2, d3, d4, d5, new int[0]);
                 }
 
@@ -270,14 +270,14 @@ public class ExplosionEventHandler
         double r = Configs.creeperChainReactionMaxDistance;
         double rSq = r * r;
         AxisAlignedBB bb = new AxisAlignedBB(
-                explosionPos.xCoord - r, explosionPos.yCoord - r, explosionPos.zCoord - r,
-                explosionPos.xCoord + r, explosionPos.yCoord + r, explosionPos.zCoord + r);
+                explosionPos.x - r, explosionPos.y - r, explosionPos.z - r,
+                explosionPos.x + r, explosionPos.y + r, explosionPos.z + r);
         List<EntityCreeper> list = world.getEntitiesWithinAABB(EntityCreeper.class, bb, EntitySelectors.IS_ALIVE);
 
         for (EntityCreeper creeper : list)
         {
             if (creeper.hasIgnited() == false && world.rand.nextFloat() < Configs.creeperChainReactionChance &&
-                creeper.getDistanceSq(explosionPos.xCoord, explosionPos.yCoord, explosionPos.zCoord) <= rSq)
+                creeper.getDistanceSq(explosionPos.x, explosionPos.y, explosionPos.z) <= rSq)
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler.causeCreeperChainReaction() - Igniting Creeper: '{}'", creeper.toString());
                 creeper.ignite();
