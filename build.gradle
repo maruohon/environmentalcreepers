@@ -7,7 +7,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
     }
 }
 
@@ -41,12 +41,12 @@ group = config.group + config.mod_id // http://maven.apache.org/guides/mini/guid
 archivesBaseName = config.mod_id + '-' + config.minecraft_version_out
 
 // Need this here so eclipse task generates correctly.
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 compileJava {
-    sourceCompatibility = 1.6
-    targetCompatibility = 1.6
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 }
 
 minecraft {
@@ -112,13 +112,17 @@ processResources
     }
 
     // Move access transformers to META-INF
-    rename '(.+_at.cfg)', 'META-INF/$1'
+    //rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
-/*
-jar {
-    manifest {
-        attributes 'FMLAT': config.mod_id + '_at.cfg'
-    }
+task signJar(type: SignJar, dependsOn: reobfJar) {
+    inputFile = jar.archivePath
+    outputFile = jar.archivePath
+
+    keyStore = config.keyStore
+    alias = config.alias
+    storePass = config.storePass
+    keyPass = config.keyPass
 }
-*/
+
+build.dependsOn signJar
