@@ -13,26 +13,22 @@ public class EnvironmentalCreepersGuiFactory extends DefaultGuiFactory
 {
     public EnvironmentalCreepersGuiFactory()
     {
-        super(Reference.MOD_ID, getTitle());
+        super(Reference.MOD_ID, GuiConfig.getAbridgedConfigPath(Configs.configurationFile.toString()));
     }
 
     @Override
     public GuiScreen createConfigGui(GuiScreen parent)
     {
-        return new GuiConfig(parent, getConfigElements(), Reference.MOD_ID, false, false, getTitle());
+        return new GuiConfig(parent, getConfigElements(), this.modid, false, false, this.title);
     }
 
     private static List<IConfigElement> getConfigElements()
     {
         List<IConfigElement> configElements = new ArrayList<IConfigElement>();
 
-        configElements.addAll(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)).getChildElements());
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_GENERIC)));
+        configElements.add(new ConfigElement(Configs.config.getCategory(Configs.CATEGORY_LISTS)));
 
         return configElements;
-    }
-
-    private static String getTitle()
-    {
-        return GuiConfig.getAbridgedConfigPath(Configs.configurationFile.toString());
     }
 }

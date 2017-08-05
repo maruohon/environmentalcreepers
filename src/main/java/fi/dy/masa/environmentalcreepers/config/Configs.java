@@ -1,6 +1,8 @@
 package fi.dy.masa.environmentalcreepers.config;
 
 import java.io.File;
+import java.util.HashSet;
+import net.minecraft.world.Explosion;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
@@ -23,17 +25,23 @@ public class Configs
     public static double creeperExplosionStrengthNormal;
     public static double creeperExplosionStrengthCharged;
     public static double otherExplosionBlockDropChance;
+    public static boolean listIsWhitelist;
     public static boolean verboseLogging;
+    private static String[] explosionBlacklistClassNames;
+    private static String[] explosionWhitelistClassNames;
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_BLACKLIST = new HashSet<Class<? extends Explosion>>();
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_WHITELIST = new HashSet<Class<? extends Explosion>>();
 
     public static File configurationFile;
     public static Configuration config;
     
     public static final String CATEGORY_GENERIC = "Generic";
+    public static final String CATEGORY_LISTS = "Lists";
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
     {
-        if (Reference.MOD_ID.equals(event.getModID()) == true)
+        if (Reference.MOD_ID.equals(event.getModID()))
         {
             loadConfigs(config);
         }
@@ -112,9 +120,46 @@ public class Configs
         prop.setComment("Log some messages on each explosion, for debugging purposes. Leave disabled for normal use.");
         verboseLogging = prop.getBoolean();
 
+        // Explosion type control lists
+
+        prop = conf.get(CATEGORY_LISTS, "listIsWhitelist", false);
+        prop.setComment("If true, then the whitelist is used. If false, then the blacklist is used.");
+        listIsWhitelist = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_LISTS, "explosionTypeBlacklist", new String[] { "slimeknights.tconstruct.gadgets.entity.ExplosionEFLN" });
+        prop.setComment("A list of full class names of explosions that should be ignored. Used if listIsWhitelist = false.");
+        explosionBlacklistClassNames = prop.getStringList();
+
+        prop = conf.get(CATEGORY_LISTS, "explosionTypeWhitelist", new String[0]);
+        prop.setComment("A list of full class names of explosions that are the only ones that should be acted on. Used if listIsWhitelist = true.");
+        explosionWhitelistClassNames = prop.getStringList();
+
+        clearAndSetExplosionClasses(EXPLOSION_BLACKLIST, explosionBlacklistClassNames);
+        clearAndSetExplosionClasses(EXPLOSION_WHITELIST, explosionWhitelistClassNames);
+
         if (conf.hasChanged())
         {
             conf.save();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearAndSetExplosionClasses(HashSet<Class<? extends Explosion>> set, String[] classNames)
+    {
+        set.clear();
+
+        for (String name : classNames)
+        {
+            try
+            {
+                Class<?> clazz = Class.forName(name);
+
+                if (Explosion.class.isAssignableFrom(clazz))
+                {
+                    set.add((Class<? extends Explosion>) clazz);
+                }
+            }
+            catch (Exception e) {}
         }
     }
 }

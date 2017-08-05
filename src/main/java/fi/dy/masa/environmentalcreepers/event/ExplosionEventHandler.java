@@ -49,6 +49,23 @@ public class ExplosionEventHandler
     {
         Explosion explosion = event.getExplosion();
 
+        if ((Configs.listIsWhitelist          && Configs.EXPLOSION_WHITELIST.contains(explosion.getClass()) == false) ||
+            (Configs.listIsWhitelist == false && Configs.EXPLOSION_BLACKLIST.contains(explosion.getClass())))
+        {
+            if (Configs.verboseLogging)
+            {
+                EnvironmentalCreepers.logInfo("Explosion (blocked by white- or blacklist): class: {}, position: {}",
+                        explosion.getClass().getName(), explosion.getPosition());
+            }
+
+            return;
+        }
+
+        if (Configs.verboseLogging)
+        {
+            EnvironmentalCreepers.logInfo("Explosion: class: {}, position: {}", explosion.getClass().getName(), explosion.getPosition());
+        }
+
         if (explosion.getExplosivePlacedBy() instanceof EntityCreeper)
         {
             if (Configs.modifyCreeperExplosionDropChance && Configs.disableCreeperExplosionBlockDamage == false)
@@ -69,6 +86,12 @@ public class ExplosionEventHandler
     public void onExplosionDetonate(ExplosionEvent.Detonate event)
     {
         Explosion explosion = event.getExplosion();
+
+        if ((Configs.listIsWhitelist          && Configs.EXPLOSION_WHITELIST.contains(explosion.getClass()) == false) ||
+            (Configs.listIsWhitelist == false && Configs.EXPLOSION_BLACKLIST.contains(explosion.getClass())))
+        {
+            return;
+        }
 
         if (explosion.getExplosivePlacedBy() instanceof EntityCreeper)
         {
@@ -124,7 +147,11 @@ public class ExplosionEventHandler
         World world = event.getWorld();
         Explosion explosion = event.getExplosion();
 
-        EnvironmentalCreepers.logInfo("Replacing the explosion for type '{}'", isCreeper ? "Creeper" : "Other");
+        if (Configs.verboseLogging)
+        {
+            EnvironmentalCreepers.logInfo("Replacing the explosion for type '{}' (class: {})",
+                    isCreeper ? "Creeper" : "Other", explosion.getClass().getName());
+        }
 
         try
         {
