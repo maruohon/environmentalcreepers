@@ -8,9 +8,11 @@ import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import fi.dy.masa.environmentalcreepers.Reference;
+import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
 
 public class Configs
 {
+    public static boolean disableCreeperExplosionCompletely;
     public static boolean disableCreeperExplosionBlockDamage;
     public static boolean disableCreeperExplosionItemDamage;
     public static boolean disableOtherExplosionBlockDamage;
@@ -84,6 +86,10 @@ public class Configs
         prop.setComment("Completely disable Creeper explosion from damaging blocks");
         disableCreeperExplosionBlockDamage = prop.getBoolean();
 
+        prop = conf.get(CATEGORY_GENERIC, "disableCreeperExplosionCompletely", false);
+        prop.setComment("Completely disable Creepers from exploding");
+        disableCreeperExplosionCompletely = prop.getBoolean();
+
         prop = conf.get(CATEGORY_GENERIC, "disableCreeperExplosionItemDamage", false);
         prop.setComment("Disable Creeper explosions from damaging items on the ground");
         disableCreeperExplosionItemDamage = prop.getBoolean();
@@ -136,6 +142,15 @@ public class Configs
 
         clearAndSetExplosionClasses(EXPLOSION_BLACKLIST, explosionBlacklistClassNames);
         clearAndSetExplosionClasses(EXPLOSION_WHITELIST, explosionWhitelistClassNames);
+
+        if (disableCreeperExplosionCompletely)
+        {
+            CreeperEventHandler.getInstance().register();
+        }
+        else
+        {
+            CreeperEventHandler.getInstance().unregister();
+        }
 
         if (conf.hasChanged())
         {
