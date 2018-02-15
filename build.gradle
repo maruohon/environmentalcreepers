@@ -12,22 +12,9 @@ buildscript {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
-/*
-apply plugin: 'maven'
 
-repositories {
-    // JEI
-    maven {
-        url "http://dvs1.progwml6.com/files/maven"
-    }
-
-    // ModMaven for Baubles
-    maven {
-        name "ModMaven"
-        url "https://modmaven.k-4u.nl"
-    }
-}
-*/
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 ext.configFile = file "build.properties"
 
@@ -39,15 +26,6 @@ configFile.withReader {
 
 group = config.group + config.mod_id // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = config.mod_id + '-' + config.minecraft_version_out
-
-// Need this here so eclipse task generates correctly.
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-compileJava {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-}
 
 minecraft {
     version = config.minecraft_version + "-" + config.forge_version
@@ -69,6 +47,10 @@ minecraft {
 
     replaceIn "Reference.java"
     replace "@MOD_VERSION@", mod_version
+
+    if (project.hasProperty("signJarKeyStore")) {
+        replace "@FINGERPRINT@", signJarFingerprint
+    }
 }
 
 dependencies {
@@ -115,14 +97,16 @@ processResources
     //rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    inputFile = jar.archivePath
-    outputFile = jar.archivePath
+if (project.hasProperty("signJarKeyStore")) {
+    task signJar(type: SignJar, dependsOn: reobfJar) {
+        inputFile = jar.archivePath
+        outputFile = jar.archivePath
 
-    keyStore = config.keyStore
-    alias = config.alias
-    storePass = config.storePass
-    keyPass = config.keyPass
+        keyStore = signJarKeyStore
+        alias = signJarAlias
+        storePass = signJarStorePass
+        keyPass = signJarKeyPass
+    }
+
+    build.dependsOn signJar
 }
-
-build.dependsOn signJar
