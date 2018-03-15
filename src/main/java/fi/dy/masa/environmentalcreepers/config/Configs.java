@@ -2,18 +2,23 @@ package fi.dy.masa.environmentalcreepers.config;
 
 import java.io.File;
 import java.util.HashSet;
+import javax.annotation.Nullable;
 import net.minecraft.world.Explosion;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.Reference;
 import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
 
 public class Configs
 {
-    public static boolean disableCreeperExplosionCompletely;
+    private static boolean copyConfigToWorld;
+    private static boolean usePerWorldConfig;
+
     public static boolean disableCreeperExplosionBlockDamage;
+    public static boolean disableCreeperExplosionCompletely;
     public static boolean disableCreeperExplosionItemDamage;
     public static boolean disableOtherExplosionBlockDamage;
     public static boolean disableOtherExplosionItemDamage;
@@ -34,11 +39,16 @@ public class Configs
     public static final HashSet<Class<? extends Explosion>> EXPLOSION_BLACKLIST = new HashSet<Class<? extends Explosion>>();
     public static final HashSet<Class<? extends Explosion>> EXPLOSION_WHITELIST = new HashSet<Class<? extends Explosion>>();
 
-    public static File configurationFile;
-    public static Configuration config;
+    private static File configFileGlobal;
+    private static Configuration config;
     
     public static final String CATEGORY_GENERIC = "Generic";
     public static final String CATEGORY_LISTS = "Lists";
+
+    public static Configuration getConfig()
+    {
+        return config;
+    }
 
     @SubscribeEvent
     public void onConfigChangedEvent(OnConfigChangedEvent event)
@@ -49,18 +59,62 @@ public class Configs
         }
     }
 
-    public static void loadConfigsFromFile(File configFile)
+    public static void setGlobalConfigDirAndLoadConfigs(File configDirCommon)
     {
-        configurationFile = configFile;
-        config = new Configuration(configFile, null, false);
-        config.load();
+        File configFile = new File(configDirCommon, Reference.MOD_ID + ".cfg");
+        configFileGlobal = configFile;
 
-        loadConfigs(config);
+        loadConfigsFromGlobalConfigFile();
     }
 
-    public static void loadConfigs(Configuration conf)
+    public static void loadConfigsFromPerWorldConfigIfExists(@Nullable File worldDir)
+    {
+        if (worldDir != null)
+        {
+            File configDir = new File(new File(worldDir, "data"), Reference.MOD_ID);
+            File configFile = new File(configDir, Reference.MOD_ID + ".cfg");
+
+            if (copyConfigToWorld)
+            {
+                ConfigFileUtils.createDirIfNotExists(configDir);
+                ConfigFileUtils.tryCopyConfigIfMissing(configFile, configFileGlobal);
+            }
+
+            if (usePerWorldConfig && configFile.exists() && configFile.isFile() && configFile.canRead())
+            {
+                loadConfigsFromFile(configFile);
+                return;
+            }
+        }
+
+        // Fall-back
+        loadConfigsFromGlobalConfigFile();
+    }
+
+    public static void loadConfigsFromGlobalConfigFile()
+    {
+        loadConfigsFromFile(configFileGlobal);
+    }
+
+    private static void loadConfigsFromFile(File configFile)
+    {
+        config = new Configuration(configFile, null, true);
+
+        if (config != null)
+        {
+            EnvironmentalCreepers.logInfo("Reloading the configs from file '{}'", config.getConfigFile().getAbsolutePath());
+            config.load();
+            loadConfigs(config);
+        }
+    }
+
+    private static void loadConfigs(Configuration conf)
     {
         Property prop;
+
+        prop = conf.get(CATEGORY_GENERIC, "copyConfigToWorld", true);
+        prop.setComment("If true, then the global config file is copied to the world\n (in data/environmentalcreepers/environmentalcreepers.cfg), if one doesn't exist there yet.");
+        copyConfigToWorld = prop.getBoolean();
 
         prop = conf.get(CATEGORY_GENERIC, "creeperChainReactionChance", 1.0);
         prop.setComment("The chance of Creeper explosions to cause other Creepers to trigger within range. Set to 1.0 to always trigger.");
@@ -121,6 +175,10 @@ public class Configs
         prop = conf.get(CATEGORY_GENERIC, "otherExplosionBlockDropChance", 1.0);
         prop.setComment("The chance of other explosions than Creepers to drop the blocks as items. Set to 1.0 to always drop.");
         otherExplosionBlockDropChance = prop.getDouble();
+
+        prop = conf.get(CATEGORY_GENERIC, "usePerWorldConfig", true);
+        prop.setComment("If true, then configs are attempted to be read from a config inside the world\n(in data/environmentalcreepers/environmentalcreepers.cfg), if one exists there.");
+        usePerWorldConfig = prop.getBoolean();
 
         prop = conf.get(CATEGORY_GENERIC, "verboseLogging", false);
         prop.setComment("Log some messages on each explosion, for debugging purposes. Leave disabled for normal use.");

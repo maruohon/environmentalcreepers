@@ -1,11 +1,16 @@
 package fi.dy.masa.environmentalcreepers;
 
+import java.io.File;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.event.ExplosionEventHandler;
 import fi.dy.masa.environmentalcreepers.proxy.ServerProxy;
@@ -22,17 +27,30 @@ public class EnvironmentalCreepers
     @SidedProxy(clientSide = "fi.dy.masa.environmentalcreepers.proxy.ClientProxy", serverSide = "fi.dy.masa.environmentalcreepers.proxy.ServerProxy")
     public static ServerProxy proxy;
 
-    public static Logger logger;
+    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         instance = this;
-        logger = event.getModLog();
-        Configs.loadConfigsFromFile(event.getSuggestedConfigurationFile());
+        Configs.setGlobalConfigDirAndLoadConfigs(event.getModConfigurationDirectory());
 
         MinecraftForge.EVENT_BUS.register(new ExplosionEventHandler());
         proxy.registerEventHandlers();
+    }
+
+    @Mod.EventHandler
+    public void onServerAboutToStart(FMLServerAboutToStartEvent event)
+    {
+        File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory, event.getServer().getFolderName());
+        Configs.loadConfigsFromPerWorldConfigIfExists(worldDir);
+    }
+
+    @Mod.EventHandler
+    public void serverStopping(FMLServerStoppingEvent event)
+    {
+        // (Re-)read the global configs after closing a world
+        Configs.loadConfigsFromGlobalConfigFile();
     }
 
     public static void logInfo(String message, Object ... params)
