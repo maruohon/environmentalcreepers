@@ -26,8 +26,8 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 
@@ -39,9 +39,9 @@ public class ExplosionEventHandler
 
     public ExplosionEventHandler()
     {
-        this.fieldExplosionSize =   ReflectionHelper.findField(Explosion.class, "field_77280_f", "size");
-        this.fieldIsSmoking =       ReflectionHelper.findField(Explosion.class, "field_82755_b", "damagesTerrain");
-        this.fieldIsFlaming =       ReflectionHelper.findField(Explosion.class, "field_77286_a", "causesFire");
+        this.fieldExplosionSize =   ObfuscationReflectionHelper.findField(Explosion.class, "field_77280_f"); // size
+        this.fieldIsSmoking =       ObfuscationReflectionHelper.findField(Explosion.class, "field_82755_b"); // damagesTerrain
+        this.fieldIsFlaming =       ObfuscationReflectionHelper.findField(Explosion.class, "field_77286_a"); // causesFire
     }
 
     @SubscribeEvent

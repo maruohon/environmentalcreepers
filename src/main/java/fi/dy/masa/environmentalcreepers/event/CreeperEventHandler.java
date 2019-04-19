@@ -4,15 +4,15 @@ import java.lang.reflect.Field;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 
 public class CreeperEventHandler
 {
-    private static final Field field_Creeper_timeSinceIgnited = ReflectionHelper.findField(EntityCreeper.class, "field_70833_d", "timeSinceIgnited");
-    private static final Field field_Creeper_fuseTime = ReflectionHelper.findField(EntityCreeper.class, "field_82225_f", "fuseTime");
+    private static final Field field_Creeper_timeSinceIgnited = ObfuscationReflectionHelper.findField(EntityCreeper.class, "field_70833_d"); // timeSinceIgnited
+    private static final Field field_Creeper_fuseTime = ObfuscationReflectionHelper.findField(EntityCreeper.class, "field_82225_f"); // fuseTime
     private static CreeperEventHandler instance = new CreeperEventHandler();
     private boolean registered;
 
