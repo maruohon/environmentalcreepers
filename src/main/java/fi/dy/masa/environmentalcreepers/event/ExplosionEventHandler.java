@@ -30,6 +30,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
+import fi.dy.masa.environmentalcreepers.config.Configs.ListType;
 
 public class ExplosionEventHandler
 {
@@ -49,8 +50,8 @@ public class ExplosionEventHandler
     {
         Explosion explosion = event.getExplosion();
 
-        if ((Configs.listIsWhitelist          && Configs.EXPLOSION_WHITELIST.contains(explosion.getClass()) == false) ||
-            (Configs.listIsWhitelist == false && Configs.EXPLOSION_BLACKLIST.contains(explosion.getClass())))
+        if ((Configs.explosionClassListType == ListType.WHITELIST && Configs.EXPLOSION_CLASS_WHITELIST.contains(explosion.getClass()) == false) ||
+            (Configs.explosionClassListType == ListType.BLACKLIST && Configs.EXPLOSION_CLASS_BLACKLIST.contains(explosion.getClass())))
         {
             if (Configs.verboseLogging)
             {
@@ -87,8 +88,8 @@ public class ExplosionEventHandler
     {
         Explosion explosion = event.getExplosion();
 
-        if ((Configs.listIsWhitelist          && Configs.EXPLOSION_WHITELIST.contains(explosion.getClass()) == false) ||
-            (Configs.listIsWhitelist == false && Configs.EXPLOSION_BLACKLIST.contains(explosion.getClass())))
+        if ((Configs.explosionClassListType == ListType.WHITELIST && Configs.EXPLOSION_CLASS_WHITELIST.contains(explosion.getClass()) == false) ||
+            (Configs.explosionClassListType == ListType.BLACKLIST && Configs.EXPLOSION_CLASS_BLACKLIST.contains(explosion.getClass())))
         {
             return;
         }
@@ -137,7 +138,12 @@ public class ExplosionEventHandler
 
             if (entity instanceof EntityItem)
             {
-                iter.remove();
+                if ( Configs.explosionEntityListType == ListType.NONE ||
+                    (Configs.explosionEntityListType == ListType.WHITELIST && Configs.EXPLOSION_ENTITY_WHITELIST.contains(entity.getClass())) ||
+                    (Configs.explosionEntityListType == ListType.BLACKLIST && Configs.EXPLOSION_ENTITY_BLACKLIST.contains(entity.getClass()) == false))
+                {
+                    iter.remove();
+                }
             }
         }
     }

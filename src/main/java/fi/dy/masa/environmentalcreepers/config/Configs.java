@@ -3,6 +3,7 @@ package fi.dy.masa.environmentalcreepers.config;
 import java.io.File;
 import java.util.HashSet;
 import javax.annotation.Nullable;
+import net.minecraft.entity.Entity;
 import net.minecraft.world.Explosion;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -14,6 +15,11 @@ import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
 
 public class Configs
 {
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_BLACKLIST = new HashSet<Class<? extends Explosion>>();
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_WHITELIST = new HashSet<Class<? extends Explosion>>();
+    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_BLACKLIST = new HashSet<Class<? extends Entity>>();
+    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_WHITELIST = new HashSet<Class<? extends Entity>>();
+
     private static boolean copyConfigToWorld;
     private static boolean usePerWorldConfig;
 
@@ -32,12 +38,13 @@ public class Configs
     public static double creeperExplosionStrengthNormal;
     public static double creeperExplosionStrengthCharged;
     public static double otherExplosionBlockDropChance;
-    public static boolean listIsWhitelist;
+    public static ListType explosionClassListType = ListType.NONE;
+    public static ListType explosionEntityListType = ListType.NONE;
     public static boolean verboseLogging;
+    private static String[] explosionEntityBlacklistClassNames;
+    private static String[] explosionEntityWhitelistClassNames;
     private static String[] explosionBlacklistClassNames;
     private static String[] explosionWhitelistClassNames;
-    public static final HashSet<Class<? extends Explosion>> EXPLOSION_BLACKLIST = new HashSet<Class<? extends Explosion>>();
-    public static final HashSet<Class<? extends Explosion>> EXPLOSION_WHITELIST = new HashSet<Class<? extends Explosion>>();
 
     private static File configFileGlobal;
     private static Configuration config;
@@ -186,20 +193,44 @@ public class Configs
 
         // Explosion type control lists
 
-        prop = conf.get(CATEGORY_LISTS, "listIsWhitelist", false);
-        prop.setComment("If true, then the whitelist is used. If false, then the blacklist is used.");
-        listIsWhitelist = prop.getBoolean();
+        prop = conf.get(CATEGORY_LISTS, "entityClassListType", "blacklist");
+        prop.setComment("The list type for the explosion class filtering.\nEither 'none' or 'blacklist' or 'whitelist'.\n" +
+                        "Blacklisted (or non-whitelisted) entities will not be removed from the explosion damage list.\n" +
+                        "This allows for example those entities to run their custom code when damaged by explosions.");
+        explosionEntityListType = ListType.fromName(prop.getString());
+
+        prop = conf.get(CATEGORY_LISTS, "entityTypeBlacklist", new String[] { "appeng.entity.EntitySingularity" });
+        prop.setComment("A list of full class names of entities that should be ignored.\n" +
+                        "This means that these entities will not get removed from the\n" +
+                        "list of entities to be damaged by the explosion, allowing these\n" +
+                        "entities to handle the explosion code themselves.\n" +
+                        "Used if entityClassListType = blacklist");
+        explosionEntityBlacklistClassNames = prop.getStringList();
+
+        prop = conf.get(CATEGORY_LISTS, "entityTypeWhitelist", new String[0]);
+        prop.setComment("A list of full class names of entities that are the only ones\n" +
+                        "that should be acted on, see the comment on entityTypeBlacklist.\n" +
+                        "Used if entityClassListType = whitelist");
+        explosionEntityWhitelistClassNames = prop.getStringList();
+
+        prop = conf.get(CATEGORY_LISTS, "explosionClassListType", "blacklist");
+        prop.setComment("The list type for the explosion class filtering.\nEither 'none' or 'blacklist' or 'whitelist'.\n" +
+                        "Blacklisted (or non-whitelisted) explosion types won't be handled by this mod.");
+        explosionClassListType = ListType.fromName(prop.getString());
 
         prop = conf.get(CATEGORY_LISTS, "explosionTypeBlacklist", new String[] { "slimeknights.tconstruct.gadgets.entity.ExplosionEFLN" });
-        prop.setComment("A list of full class names of explosions that should be ignored. Used if listIsWhitelist = false.");
+        prop.setComment("A list of full class names of explosions that should be ignored. Used if explosionClassListType = blacklist");
         explosionBlacklistClassNames = prop.getStringList();
 
         prop = conf.get(CATEGORY_LISTS, "explosionTypeWhitelist", new String[0]);
-        prop.setComment("A list of full class names of explosions that are the only ones that should be acted on. Used if listIsWhitelist = true.");
+        prop.setComment("A list of full class names of explosions that are the only ones that should be acted on. Used if explosionClassListType = whitelist");
         explosionWhitelistClassNames = prop.getStringList();
 
-        clearAndSetExplosionClasses(EXPLOSION_BLACKLIST, explosionBlacklistClassNames);
-        clearAndSetExplosionClasses(EXPLOSION_WHITELIST, explosionWhitelistClassNames);
+        clearAndSetEntityClasses(EXPLOSION_ENTITY_BLACKLIST, explosionEntityBlacklistClassNames);
+        clearAndSetEntityClasses(EXPLOSION_ENTITY_WHITELIST, explosionEntityWhitelistClassNames);
+
+        clearAndSetExplosionClasses(EXPLOSION_CLASS_BLACKLIST, explosionBlacklistClassNames);
+        clearAndSetExplosionClasses(EXPLOSION_CLASS_WHITELIST, explosionWhitelistClassNames);
 
         if (disableCreeperExplosionCompletely)
         {
@@ -213,6 +244,33 @@ public class Configs
         if (conf.hasChanged())
         {
             conf.save();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearAndSetEntityClasses(HashSet<Class<? extends Entity>> set, String[] classNames)
+    {
+        set.clear();
+
+        for (String name : classNames)
+        {
+            try
+            {
+                Class<?> clazz = Class.forName(name);
+
+                if (Entity.class.isAssignableFrom(clazz))
+                {
+                    set.add((Class<? extends Entity>) clazz);
+                }
+                else
+                {
+                    EnvironmentalCreepers.logger.warn("Invalid entity class name (not an Entity): '{}'", name);
+                }
+            }
+            catch (Exception e)
+            {
+                EnvironmentalCreepers.logger.warn("Invalid entity class name (class not found): '{}'", name);
+            }
         }
     }
 
@@ -231,8 +289,42 @@ public class Configs
                 {
                     set.add((Class<? extends Explosion>) clazz);
                 }
+                else
+                {
+                    EnvironmentalCreepers.logger.warn("Invalid explosion class name (not an explosion class): '{}'", name);
+                }
             }
-            catch (Exception e) {}
+            catch (Exception e)
+            {
+                EnvironmentalCreepers.logger.warn("Invalid explosion class name (class not found): '{}'", name);
+            }
+        }
+    }
+
+    public static enum ListType
+    {
+        NONE        ("none"),
+        BLACKLIST   ("blacklist"),
+        WHITELIST   ("whitelist");
+
+        private final String name;
+
+        ListType(String name)
+        {
+            this.name = name;
+        }
+
+        public static ListType fromName(String name)
+        {
+            for (ListType val : values())
+            {
+                if (val.name.equalsIgnoreCase(name))
+                {
+                    return val;
+                }
+            }
+
+            return ListType.NONE;
         }
     }
 }
