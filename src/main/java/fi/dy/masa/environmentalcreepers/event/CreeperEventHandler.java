@@ -1,18 +1,18 @@
 package fi.dy.masa.environmentalcreepers.event;
 
 import java.lang.reflect.Field;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.entity.monster.CreeperEntity;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class CreeperEventHandler
 {
-    private static final Field field_Creeper_timeSinceIgnited = ObfuscationReflectionHelper.findField(EntityCreeper.class, "field_70833_d"); // timeSinceIgnited
-    private static final Field field_Creeper_fuseTime = ObfuscationReflectionHelper.findField(EntityCreeper.class, "field_82225_f"); // fuseTime
+    private static final Field field_Creeper_timeSinceIgnited = ObfuscationReflectionHelper.findField(CreeperEntity.class, "field_70833_d"); // timeSinceIgnited
+    private static final Field field_Creeper_fuseTime = ObfuscationReflectionHelper.findField(CreeperEntity.class, "field_82225_f"); // fuseTime
     private static CreeperEventHandler instance = new CreeperEventHandler();
     private boolean registered;
 
@@ -44,9 +44,9 @@ public class CreeperEventHandler
     @SubscribeEvent
     public void onLivingUpdate(LivingUpdateEvent event)
     {
-        if (Configs.disableCreeperExplosionCompletely && event.getEntity() instanceof EntityCreeper)
+        if (Configs.Toggles.disableCreeperExplosionCompletely && event.getEntity() instanceof CreeperEntity)
         {
-            EntityCreeper creeper = (EntityCreeper) event.getEntity();
+            CreeperEntity creeper = (CreeperEntity) event.getEntity();
             int state = creeper.getCreeperState();
 
             if (state > 0)

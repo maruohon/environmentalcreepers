@@ -5,44 +5,47 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.network.play.server.SPacketExplosion;
-import net.minecraft.util.EntitySelectors;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.monster.CreeperEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.SExplosionPacket;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.event.world.ExplosionEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.loot.LootContext;
+import net.minecraft.world.storage.loot.LootParameters;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.config.Configs.ListType;
+import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class ExplosionEventHandler
 {
     private final Field fieldExplosionSize;
-    private final Field fieldIsFlaming;
-    private final Field fieldIsSmoking;
+    private final Field fieldExplosionMode;
+    private final Field fieldCausesFire;
 
     public ExplosionEventHandler()
     {
-        this.fieldExplosionSize =   ObfuscationReflectionHelper.findField(Explosion.class, "field_77280_f"); // size
-        this.fieldIsSmoking =       ObfuscationReflectionHelper.findField(Explosion.class, "field_82755_b"); // damagesTerrain
-        this.fieldIsFlaming =       ObfuscationReflectionHelper.findField(Explosion.class, "field_77286_a"); // causesFire
+        this.fieldExplosionSize = ObfuscationReflectionHelper.findField(Explosion.class, "field_77280_f"); // size
+        this.fieldExplosionMode = ObfuscationReflectionHelper.findField(Explosion.class, "field_222260_b"); // mode
+        this.fieldCausesFire    = ObfuscationReflectionHelper.findField(Explosion.class, "field_77286_a"); // causesFire
     }
 
     @SubscribeEvent
@@ -50,10 +53,10 @@ public class ExplosionEventHandler
     {
         Explosion explosion = event.getExplosion();
 
-        if ((Configs.explosionClassListType == ListType.WHITELIST && Configs.EXPLOSION_CLASS_WHITELIST.contains(explosion.getClass()) == false) ||
-            (Configs.explosionClassListType == ListType.BLACKLIST && Configs.EXPLOSION_CLASS_BLACKLIST.contains(explosion.getClass())))
+        if ((Configs.Lists.explosionClassListType == ListType.WHITELIST && Configs.EXPLOSION_CLASS_WHITELIST.contains(explosion.getClass()) == false) ||
+            (Configs.Lists.explosionClassListType == ListType.BLACKLIST && Configs.EXPLOSION_CLASS_BLACKLIST.contains(explosion.getClass())))
         {
-            if (Configs.verboseLogging)
+            if (Configs.Generic.verboseLogging)
             {
                 EnvironmentalCreepers.logInfo("Explosion (blocked by white- or blacklist): class: {}, position: {}",
                         explosion.getClass().getName(), explosion.getPosition());
@@ -62,21 +65,21 @@ public class ExplosionEventHandler
             return;
         }
 
-        if (Configs.verboseLogging)
+        if (Configs.Generic.verboseLogging)
         {
             EnvironmentalCreepers.logInfo("Explosion: class: {}, position: {}", explosion.getClass().getName(), explosion.getPosition());
         }
 
-        if (explosion.getExplosivePlacedBy() instanceof EntityCreeper)
+        if (explosion.getExplosivePlacedBy() instanceof CreeperEntity)
         {
-            if (Configs.modifyCreeperExplosionDropChance && Configs.disableCreeperExplosionBlockDamage == false)
+            if (Configs.Toggles.modifyCreeperExplosionDropChance && Configs.Toggles.disableCreeperExplosionBlockDamage == false)
             {
                 this.replaceExplosion(event, true);
             }
         }
         else
         {
-            if (Configs.modifyOtherExplosionDropChance && Configs.disableOtherExplosionBlockDamage == false)
+            if (Configs.Toggles.modifyOtherExplosionDropChance && Configs.Toggles.disableOtherExplosionBlockDamage == false)
             {
                 this.replaceExplosion(event, false);
             }
@@ -88,38 +91,38 @@ public class ExplosionEventHandler
     {
         Explosion explosion = event.getExplosion();
 
-        if ((Configs.explosionClassListType == ListType.WHITELIST && Configs.EXPLOSION_CLASS_WHITELIST.contains(explosion.getClass()) == false) ||
-            (Configs.explosionClassListType == ListType.BLACKLIST && Configs.EXPLOSION_CLASS_BLACKLIST.contains(explosion.getClass())))
+        if ((Configs.Lists.explosionClassListType == ListType.WHITELIST && Configs.EXPLOSION_CLASS_WHITELIST.contains(explosion.getClass()) == false) ||
+            (Configs.Lists.explosionClassListType == ListType.BLACKLIST && Configs.EXPLOSION_CLASS_BLACKLIST.contains(explosion.getClass())))
         {
             return;
         }
 
-        if (explosion.getExplosivePlacedBy() instanceof EntityCreeper)
+        if (explosion.getExplosivePlacedBy() instanceof CreeperEntity)
         {
-            if (Configs.disableCreeperExplosionItemDamage)
+            if (Configs.Toggles.disableCreeperExplosionItemDamage)
             {
                 this.removeItemEntities(event.getAffectedEntities(), true);
             }
 
-            if (Configs.disableCreeperExplosionBlockDamage)
+            if (Configs.Toggles.disableCreeperExplosionBlockDamage)
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Creeper'");
                 explosion.clearAffectedBlockPositions();
             }
 
-            if (Configs.enableCreeperExplosionChainReaction)
+            if (Configs.Toggles.enableCreeperExplosionChainReaction)
             {
                 this.causeCreeperChainReaction(event.getWorld(), explosion.getPosition());
             }
         }
         else
         {
-            if (Configs.disableOtherExplosionItemDamage)
+            if (Configs.Toggles.disableOtherExplosionItemDamage)
             {
                 this.removeItemEntities(event.getAffectedEntities(), false);
             }
 
-            if (Configs.disableOtherExplosionBlockDamage)
+            if (Configs.Toggles.disableOtherExplosionBlockDamage)
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Other'");
                 explosion.clearAffectedBlockPositions();
@@ -131,16 +134,17 @@ public class ExplosionEventHandler
     {
         EnvironmentalCreepers.logInfo("ExplosionEventHandler.removeItemEntities() - Type: '{}'", isCreeper ? "Creeper" : "Other");
         Iterator<Entity> iter = list.iterator();
+        ListType type = Configs.Lists.entityClassListType;
 
         while (iter.hasNext())
         {
             Entity entity = iter.next();
 
-            if (entity instanceof EntityItem)
+            if (entity instanceof ItemEntity)
             {
-                if ( Configs.explosionEntityListType == ListType.NONE ||
-                    (Configs.explosionEntityListType == ListType.WHITELIST && Configs.EXPLOSION_ENTITY_WHITELIST.contains(entity.getClass())) ||
-                    (Configs.explosionEntityListType == ListType.BLACKLIST && Configs.EXPLOSION_ENTITY_BLACKLIST.contains(entity.getClass()) == false))
+                if ( type == ListType.NONE ||
+                    (type == ListType.WHITELIST && Configs.EXPLOSION_ENTITY_WHITELIST.contains(entity.getClass())) ||
+                    (type == ListType.BLACKLIST && Configs.EXPLOSION_ENTITY_BLACKLIST.contains(entity.getClass()) == false))
                 {
                     iter.remove();
                 }
@@ -153,7 +157,7 @@ public class ExplosionEventHandler
         World world = event.getWorld();
         Explosion explosion = event.getExplosion();
 
-        if (Configs.verboseLogging)
+        if (Configs.Generic.verboseLogging)
         {
             EnvironmentalCreepers.logInfo("Replacing the explosion for type '{}' (class: {})",
                     isCreeper ? "Creeper" : "Other", explosion.getClass().getName());
@@ -161,19 +165,19 @@ public class ExplosionEventHandler
 
         try
         {
-            boolean isSmoking = this.fieldIsSmoking.getBoolean(explosion);
-            boolean isFlaming = this.fieldIsFlaming.getBoolean(explosion);
+            boolean causesFire = this.fieldCausesFire.getBoolean(explosion);
+            Explosion.Mode mode = (Explosion.Mode) this.fieldExplosionMode.get(explosion);
             float explosionSize;
 
-            if (isCreeper && Configs.modifyCreeperExplosionStrength)
+            if (isCreeper && Configs.Toggles.modifyCreeperExplosionStrength)
             {
-                if (((EntityCreeper) explosion.getExplosivePlacedBy()).getPowered())
+                if (((CreeperEntity) explosion.getExplosivePlacedBy()).getPowered())
                 {
-                    explosionSize = (float) Configs.creeperExplosionStrengthCharged;
+                    explosionSize = (float) Configs.Generic.creeperExplosionStrengthCharged;
                 }
                 else
                 {
-                    explosionSize = (float) Configs.creeperExplosionStrengthNormal;
+                    explosionSize = (float) Configs.Generic.creeperExplosionStrengthNormal;
                 }
 
                 this.fieldExplosionSize.setFloat(explosion, explosionSize);
@@ -185,30 +189,31 @@ public class ExplosionEventHandler
 
             explosion.doExplosionA();
 
-            if (world instanceof WorldServer)
+            if (world instanceof ServerWorld)
             {
-                this.doExplosionB(world, explosion, false, isCreeper, isSmoking, isFlaming, explosionSize);
+                ServerWorld serverWorld = (ServerWorld) world;
+                this.doExplosionB(world, explosion, mode, false, causesFire, explosionSize, isCreeper);
 
-                if (isSmoking == false)
+                if (mode == Explosion.Mode.NONE)
                 {
                     explosion.clearAffectedBlockPositions();
                 }
 
                 Vec3d pos = explosion.getPosition();
 
-                for (EntityPlayer player : world.playerEntities)
+                for (PlayerEntity player : serverWorld.getPlayers())
                 {
                     if (player.getDistanceSq(pos.x, pos.y, pos.z) < 4096.0D)
                     {
-                        ((EntityPlayerMP) player).connection.sendPacket(
-                                new SPacketExplosion(pos.x, pos.y, pos.z, explosionSize,
+                        ((ServerPlayerEntity) player).connection.sendPacket(
+                                new SExplosionPacket(pos.x, pos.y, pos.z, explosionSize,
                                         explosion.getAffectedBlockPositions(), explosion.getPlayerKnockbackMap().get(player)));
                     }
                 }
             }
             else
             {
-                this.doExplosionB(world, explosion, true, isCreeper, isSmoking, isFlaming, explosionSize);
+                this.doExplosionB(world, explosion, mode, true, causesFire, explosionSize, isCreeper);
             }
         }
         catch (IllegalAccessException e)
@@ -223,40 +228,42 @@ public class ExplosionEventHandler
         event.setCanceled(true);
     }
 
-    private void doExplosionB(World world, Explosion explosion, boolean spawnParticles, boolean isCreeper, boolean isSmoking, boolean isFlaming, float explosionSize)
+    private void doExplosionB(World world, Explosion explosion, Explosion.Mode mode, boolean spawnParticles, boolean causesFire, float explosionSize, boolean isCreeper)
     {
-        Vec3d pos = explosion.getPosition();
+        Vec3d posVec = explosion.getPosition();
         Random rand = world.rand;
+        boolean breaksBlock = mode != Explosion.Mode.NONE &&
+                (isCreeper ? Configs.Toggles.disableCreeperExplosionBlockDamage == false :
+                             Configs.Toggles.disableOtherExplosionBlockDamage == false);
 
-        world.playSound((EntityPlayer)null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.2F) * 0.7F);
+        world.playSound(null, posVec.x, posVec.y, posVec.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.2F) * 0.7F);
 
-        if (explosionSize >= 2.0F && isSmoking)
+        if (explosionSize >= 2.0F && breaksBlock)
         {
-            world.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, pos.x, pos.y, pos.z, 1.0D, 0.0D, 0.0D, new int[0]);
+            world.addParticle(ParticleTypes.EXPLOSION_EMITTER, posVec.x, posVec.y, posVec.z, 1.0D, 0.0D, 0.0D);
         }
         else
         {
-            world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, pos.x, pos.y, pos.z, 1.0D, 0.0D, 0.0D, new int[0]);
+            world.addParticle(ParticleTypes.EXPLOSION, posVec.x, posVec.y, posVec.z, 1.0D, 0.0D, 0.0D);
         }
 
-        float dropChance = (float)(isCreeper ? Configs.creeperExplosionBlockDropChance : Configs.otherExplosionBlockDropChance);
+        float dropChance = (float) (isCreeper ? Configs.Generic.creeperExplosionBlockDropChance : Configs.Generic.otherExplosionBlockDropChance);
         EnvironmentalCreepers.logInfo("ExplosionEventHandler.doExplosionB() - Type: '{}', drop chance: {}", isCreeper ? "Creeper" : "Other", dropChance);
 
-        if (isSmoking)
+        if (breaksBlock)
         {
-            for (BlockPos blockpos : explosion.getAffectedBlockPositions())
+            for (BlockPos pos : explosion.getAffectedBlockPositions())
             {
-                IBlockState iblockstate = world.getBlockState(blockpos);
-                Block block = iblockstate.getBlock();
+                BlockState state = world.getBlockState(pos);
 
                 if (spawnParticles)
                 {
-                    double d0 = blockpos.getX() + rand.nextFloat();
-                    double d1 = blockpos.getY() + rand.nextFloat();
-                    double d2 = blockpos.getZ() + rand.nextFloat();
-                    double d3 = d0 - pos.x;
-                    double d4 = d1 - pos.y;
-                    double d5 = d2 - pos.z;
+                    double d0 = pos.getX() + rand.nextFloat();
+                    double d1 = pos.getY() + rand.nextFloat();
+                    double d2 = pos.getZ() + rand.nextFloat();
+                    double d3 = d0 - posVec.x;
+                    double d4 = d1 - posVec.y;
+                    double d5 = d2 - posVec.z;
                     double d6 = MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);
                     d3 = d3 / d6;
                     d4 = d4 / d6;
@@ -266,31 +273,50 @@ public class ExplosionEventHandler
                     d3 = d3 * d7;
                     d4 = d4 * d7;
                     d5 = d5 * d7;
-                    world.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, (d0 + pos.x) / 2.0D, (d1 + pos.y) / 2.0D, (d2 + pos.z) / 2.0D, d3, d4, d5, new int[0]);
-                    world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, d0, d1, d2, d3, d4, d5, new int[0]);
+                    world.addParticle(ParticleTypes.POOF, (d0 + posVec.x) / 2.0D, (d1 + posVec.y) / 2.0D, (d2 + posVec.z) / 2.0D, d3, d4, d5);
+                    world.addParticle(ParticleTypes.SMOKE, d0, d1, d2, d3, d4, d5);
                 }
 
-                if (iblockstate.getMaterial() != Material.AIR)
+                if (state.isAir(world, pos) == false)
                 {
-                    if (block.canDropFromExplosion(explosion))
+                    if ((world instanceof ServerWorld) && state.canDropFromExplosion(world, pos, explosion))
                     {
-                        block.dropBlockAsItemWithChance(world, blockpos, iblockstate, dropChance, 0);
+                        // The corresponding modify explosion chance config option is going
+                        // to be true when this method is called in the first place
+                        if (dropChance > 0)
+                        {
+                            ServerWorld serverWorld = (ServerWorld) world;
+                            TileEntity te = state.hasTileEntity() ? world.getTileEntity(pos) : null;
+                            LootContext.Builder builder = (new LootContext.Builder(serverWorld))
+                                    .withRandom(rand).withParameter(LootParameters.POSITION, pos)
+                                    .withParameter(LootParameters.TOOL, ItemStack.EMPTY)
+                                    .withNullableParameter(LootParameters.BLOCK_ENTITY, te);
+
+                            if (dropChance < 1.0f)
+                            {
+                                // See SurvivesExplosion loot condition
+                                float size = 1.0f / dropChance;
+                                builder.withParameter(LootParameters.EXPLOSION_RADIUS, size);
+                            }
+
+                            Block.spawnDrops(state, builder);
+                        }
                     }
 
-                    block.onBlockExploded(world, blockpos, explosion);
+                    state.onBlockExploded(world, pos, explosion);
                 }
             }
         }
 
-        if (isFlaming)
+        if (causesFire)
         {
-            for (BlockPos blockpos : explosion.getAffectedBlockPositions())
+            for (BlockPos pos : explosion.getAffectedBlockPositions())
             {
-                if (rand.nextInt(3) == 0 &&
-                    world.getBlockState(blockpos).getMaterial() == Material.AIR &&
-                    world.getBlockState(blockpos.down()).isFullBlock())
+                if (world.getBlockState(pos).isAir(world, pos) &&
+                    world.getBlockState(pos.down()).isOpaqueCube(world, pos.down()) &&
+                    rand.nextInt(3) == 0)
                 {
-                    world.setBlockState(blockpos, Blocks.FIRE.getDefaultState());
+                    world.setBlockState(pos, Blocks.FIRE.getDefaultState());
                 }
             }
         }
@@ -300,16 +326,16 @@ public class ExplosionEventHandler
     {
         EnvironmentalCreepers.logInfo("ExplosionEventHandler.causeCreeperChainReaction() - Explosion Position: '{}'", explosionPos);
 
-        double r = Configs.creeperChainReactionMaxDistance;
+        double r = Configs.Generic.creeperChainReactionMaxDistance;
         double rSq = r * r;
         AxisAlignedBB bb = new AxisAlignedBB(
                 explosionPos.x - r, explosionPos.y - r, explosionPos.z - r,
                 explosionPos.x + r, explosionPos.y + r, explosionPos.z + r);
-        List<EntityCreeper> list = world.getEntitiesWithinAABB(EntityCreeper.class, bb, EntitySelectors.IS_ALIVE);
+        List<CreeperEntity> list = world.getEntitiesWithinAABB(CreeperEntity.class, bb, (ent) -> ((ent instanceof LivingEntity) && ((LivingEntity) ent).getHealth() > 0));
 
-        for (EntityCreeper creeper : list)
+        for (CreeperEntity creeper : list)
         {
-            if (creeper.hasIgnited() == false && world.rand.nextFloat() < Configs.creeperChainReactionChance &&
+            if (creeper.hasIgnited() == false && world.rand.nextFloat() < Configs.Generic.creeperChainReactionChance &&
                 creeper.getDistanceSq(explosionPos.x, explosionPos.y, explosionPos.z) <= rSq)
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler.causeCreeperChainReaction() - Igniting Creeper: '{}'", creeper.toString());
