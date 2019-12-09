@@ -25,7 +25,8 @@ configFile.withReader {
 }
 
 minecraft {
-    mappings channel: 'snapshot', version: '20191019-1.14.3'
+    //mappings channel: 'snapshot', version: '20191019-1.14.3'
+    mappings = config.mappings_version
 
     //makeObfSourceJar = false
 
