@@ -94,7 +94,7 @@ public class Configs
 
         COMMON_BUILDER.comment(" If true, then the global config file is copied to the world\n" +
                                " (in worldname/environmentalcreepers/environmentalcreepers.cfg), if one doesn't exist there yet.")
-                      .define("copyConfigToWorld", true);
+                      .define("copyConfigToWorld", false);
 
         COMMON_BUILDER.comment(" The chance of Creeper explosions to cause other Creepers to trigger\n" +
                                " within range. Set to 1.0 to always trigger.")
@@ -121,7 +121,7 @@ public class Configs
 
         COMMON_BUILDER.comment(" If true, then configs are attempted to be read from a config inside\n" +
                                " the world (in worldname/environmentalcreepers/environmentalcreepers.cfg), if one exists there.")
-                      .define("usePerWorldConfig", true);
+                      .define("usePerWorldConfig", false);
 
         COMMON_BUILDER.comment(" Log some messages on each explosion, for debugging purposes.\n" +
                                " Leave disabled for normal use.")
@@ -161,7 +161,7 @@ public class Configs
 
         COMMON_BUILDER.comment(" Modify the chance of other explosions than Creepers to drop the blocks\n" +
                                " as items. Set the chance in otherExplosionBlockDropChance.")
-                      .define("modifyOtherExplosionDropChance", true);
+                      .define("modifyOtherExplosionDropChance", false);
 
         COMMON_BUILDER.pop();
     }
