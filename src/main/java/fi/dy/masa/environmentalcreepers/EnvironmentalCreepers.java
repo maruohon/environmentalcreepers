@@ -3,6 +3,7 @@ package fi.dy.masa.environmentalcreepers;
 import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import fi.dy.masa.environmentalcreepers.commands.CommandReloadConfig;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.event.ExplosionEventHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -12,6 +13,7 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -30,6 +32,7 @@ public class EnvironmentalCreepers
 
         MinecraftForge.EVENT_BUS.register(new ExplosionEventHandler());
         MinecraftForge.EVENT_BUS.addListener(this::onServerAboutToStart);
+        MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(this::serverStopping);
 
         Configs.loadConfig(FMLPaths.CONFIGDIR.get().resolve(Reference.MOD_ID + ".toml"));
@@ -62,6 +65,11 @@ public class EnvironmentalCreepers
     {
         File dataDir = event.getServer().getActiveAnvilConverter().getFile(event.getServer().getFolderName(), Reference.MOD_ID);
         Configs.loadConfigsFromPerWorldConfigIfExists(dataDir);
+    }
+
+    private void onServerStarting(final FMLServerStartingEvent event)
+    {
+        CommandReloadConfig.register(event.getCommandDispatcher());
     }
 
     private void serverStopping(final FMLServerStoppingEvent event)

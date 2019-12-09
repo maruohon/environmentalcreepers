@@ -73,6 +73,7 @@ public class Configs
     }
 
     private static File configFileGlobal;
+    private static Path lastLoadedConfig;
 
     static
     {
@@ -321,6 +322,8 @@ public class Configs
         spec.setConfig(configData);
 
         setConfigValues(spec);
+
+        lastLoadedConfig = path;
     }
 
     public static void setGlobalConfigDirAndLoadConfigs(File configDirCommon)
@@ -357,6 +360,17 @@ public class Configs
     public static void loadConfigsFromGlobalConfigFile()
     {
         loadConfig(configFileGlobal.toPath());
+    }
+
+    public static boolean reloadConfig()
+    {
+        if (lastLoadedConfig != null)
+        {
+            loadConfig(lastLoadedConfig);
+            return true;
+        }
+
+        return false;
     }
 
     @SuppressWarnings("unchecked")
