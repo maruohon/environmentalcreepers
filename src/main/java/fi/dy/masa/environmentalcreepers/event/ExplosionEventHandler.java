@@ -1,9 +1,12 @@
 package fi.dy.masa.environmentalcreepers.event;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import javax.annotation.Nullable;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -21,7 +24,6 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
@@ -31,6 +33,7 @@ import net.minecraft.world.storage.loot.LootParameters;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.config.Configs.ListType;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -39,12 +42,14 @@ public class ExplosionEventHandler
 {
     private final Field fieldExplosionSize;
     private final Field fieldExplosionMode;
+    private final Field fieldExploder;
     private final Field fieldCausesFire;
 
     public ExplosionEventHandler()
     {
         this.fieldExplosionSize = ObfuscationReflectionHelper.findField(Explosion.class, "field_77280_f"); // size
         this.fieldExplosionMode = ObfuscationReflectionHelper.findField(Explosion.class, "field_222260_b"); // mode
+        this.fieldExploder      = ObfuscationReflectionHelper.findField(Explosion.class, "field_77283_e"); // exploder
         this.fieldCausesFire    = ObfuscationReflectionHelper.findField(Explosion.class, "field_77286_a"); // causesFire
     }
 
@@ -171,7 +176,7 @@ public class ExplosionEventHandler
 
             if (isCreeper && Configs.Toggles.modifyCreeperExplosionStrength)
             {
-                if (((CreeperEntity) explosion.getExplosivePlacedBy()).getPowered())
+                if (((CreeperEntity) explosion.getExplosivePlacedBy()).func_225509_J__()) // getPowered
                 {
                     explosionSize = (float) Configs.Generic.creeperExplosionStrengthCharged;
                 }
@@ -252,33 +257,17 @@ public class ExplosionEventHandler
 
         if (breaksBlock)
         {
+            ObjectArrayList<Pair<ItemStack, BlockPos>> drops = new ObjectArrayList<>();
+            Collections.shuffle(explosion.getAffectedBlockPositions(), world.rand);
+
             for (BlockPos pos : explosion.getAffectedBlockPositions())
             {
                 BlockState state = world.getBlockState(pos);
 
-                if (spawnParticles)
-                {
-                    double d0 = pos.getX() + rand.nextFloat();
-                    double d1 = pos.getY() + rand.nextFloat();
-                    double d2 = pos.getZ() + rand.nextFloat();
-                    double d3 = d0 - posVec.x;
-                    double d4 = d1 - posVec.y;
-                    double d5 = d2 - posVec.z;
-                    double d6 = MathHelper.sqrt(d3 * d3 + d4 * d4 + d5 * d5);
-                    d3 = d3 / d6;
-                    d4 = d4 / d6;
-                    d5 = d5 / d6;
-                    double d7 = 0.5D / (d6 / explosionSize + 0.1D);
-                    d7 = d7 * (double)(rand.nextFloat() * rand.nextFloat() + 0.3F);
-                    d3 = d3 * d7;
-                    d4 = d4 * d7;
-                    d5 = d5 * d7;
-                    world.addParticle(ParticleTypes.POOF, (d0 + posVec.x) / 2.0D, (d1 + posVec.y) / 2.0D, (d2 + posVec.z) / 2.0D, d3, d4, d5);
-                    world.addParticle(ParticleTypes.SMOKE, d0, d1, d2, d3, d4, d5);
-                }
-
                 if (state.isAir(world, pos) == false)
                 {
+                    world.getProfiler().startSection("explosion_blocks");
+
                     if ((world instanceof ServerWorld) && state.canDropFromExplosion(world, pos, explosion))
                     {
                         // The corresponding modify explosion chance config option is going
@@ -287,10 +276,14 @@ public class ExplosionEventHandler
                         {
                             ServerWorld serverWorld = (ServerWorld) world;
                             TileEntity te = state.hasTileEntity() ? world.getTileEntity(pos) : null;
+                            Entity exploder = this.getExploder(explosion);
+
                             LootContext.Builder builder = (new LootContext.Builder(serverWorld))
-                                    .withRandom(rand).withParameter(LootParameters.POSITION, pos)
+                                    .withRandom(rand)
+                                    .withParameter(LootParameters.POSITION, pos)
                                     .withParameter(LootParameters.TOOL, ItemStack.EMPTY)
-                                    .withNullableParameter(LootParameters.BLOCK_ENTITY, te);
+                                    .withNullableParameter(LootParameters.BLOCK_ENTITY, te)
+                                    .withNullableParameter(LootParameters.THIS_ENTITY, exploder);
 
                             if (dropChance < 1.0f)
                             {
@@ -299,12 +292,20 @@ public class ExplosionEventHandler
                                 builder.withParameter(LootParameters.EXPLOSION_RADIUS, size);
                             }
 
-                            Block.spawnDrops(state, builder);
+                            state.getDrops(builder).forEach((stack) -> {
+                                mergeStackToPreviousDrops(drops, stack, pos);
+                            });
                         }
                     }
 
                     state.onBlockExploded(world, pos, explosion);
+                    world.getProfiler().endSection();
                 }
+            }
+
+            for (Pair<ItemStack, BlockPos> pair : drops)
+            {
+                Block.spawnAsEntity(world, pair.getSecond(), pair.getFirst());
             }
         }
 
@@ -320,6 +321,45 @@ public class ExplosionEventHandler
                 }
             }
         }
+    }
+
+    @Nullable
+    private Entity getExploder(Explosion explosion)
+    {
+        try
+        {
+            return (Entity) this.fieldExploder.get(explosion);
+        }
+        catch (Exception e)
+        {
+            // NO-OP
+        }
+
+        return null;
+    }
+
+    private static void mergeStackToPreviousDrops(ObjectArrayList<Pair<ItemStack, BlockPos>> drops, ItemStack stack, BlockPos pos)
+    {
+        final int size = drops.size();
+
+        for (int i = 0; i < size; ++i)
+        {
+            Pair<ItemStack, BlockPos> pair = drops.get(i);
+            ItemStack stackTmp = pair.getFirst();
+
+            if (ItemEntity.func_226532_a_(stackTmp, stack)) // canMerge
+            {
+                ItemStack stackNew = ItemEntity.func_226533_a_(stackTmp, stack, 16); // mergeToFirstStackUpTo
+                drops.set(i, Pair.of(stackNew, pair.getSecond()));
+
+                if (stack.isEmpty())
+                {
+                    return;
+                }
+           }
+        }
+
+        drops.add(Pair.of(stack, pos));
     }
 
     private void causeCreeperChainReaction(World world, Vec3d explosionPos)
