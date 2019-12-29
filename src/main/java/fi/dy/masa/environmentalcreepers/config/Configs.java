@@ -62,6 +62,15 @@ public class Configs
     {
         if (Reference.MOD_ID.equals(event.getModID()))
         {
+            reloadConfig();
+        }
+    }
+
+    public static void reloadConfig()
+    {
+        if (config != null)
+        {
+            EnvironmentalCreepers.logInfo("Reloading the configs from file '{}'", config.getConfigFile().getAbsolutePath());
             loadConfigs(config);
         }
     }
@@ -106,22 +115,26 @@ public class Configs
     private static void loadConfigsFromFile(File configFile)
     {
         config = new Configuration(configFile, null, true);
-
-        if (config != null)
-        {
-            EnvironmentalCreepers.logInfo("Reloading the configs from file '{}'", config.getConfigFile().getAbsolutePath());
-            config.load();
-            loadConfigs(config);
-        }
+        reloadConfig();
     }
 
     private static void loadConfigs(Configuration conf)
     {
+        conf.load();
+
         Property prop;
 
         prop = conf.get(CATEGORY_GENERIC, "copyConfigToWorld", true);
         prop.setComment("If true, then the global config file is copied to the world\n (in data/environmentalcreepers/environmentalcreepers.cfg), if one doesn't exist there yet.");
         copyConfigToWorld = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_GENERIC, "creeperAltitudeDamageMaxY", 64);
+        prop.setComment("The maximum y position where Creeper explosions will do block damage,\nif enableCreeperAltitudeCondition is enabled.");
+        creeperAltitudeDamageMaxY = prop.getDouble();
+
+        prop = conf.get(CATEGORY_GENERIC, "creeperAltitudeDamageMinY", -64);
+        prop.setComment("The minimum y position where Creeper explosions will do block damage,\nif enableCreeperAltitudeCondition is enabled.");
+        creeperAltitudeDamageMinY = prop.getDouble();
 
         prop = conf.get(CATEGORY_GENERIC, "creeperChainReactionChance", 1.0);
         prop.setComment("The chance of Creeper explosions to cause other Creepers to trigger within range. Set to 1.0 to always trigger.");

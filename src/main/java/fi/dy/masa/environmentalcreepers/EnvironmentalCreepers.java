@@ -10,7 +10,9 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
+import fi.dy.masa.environmentalcreepers.commands.CommandReloadConfigs;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.event.ExplosionEventHandler;
 import fi.dy.masa.environmentalcreepers.proxy.ServerProxy;
@@ -44,6 +46,12 @@ public class EnvironmentalCreepers
     {
         File worldDir = new File(((AnvilSaveConverter) event.getServer().getActiveAnvilConverter()).savesDirectory, event.getServer().getFolderName());
         Configs.loadConfigsFromPerWorldConfigIfExists(worldDir);
+    }
+
+    @Mod.EventHandler
+    public void onServerStarting(FMLServerStartingEvent event)
+    {
+        event.registerServerCommand(new CommandReloadConfigs());
     }
 
     @Mod.EventHandler
