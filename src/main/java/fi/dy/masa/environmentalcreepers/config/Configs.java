@@ -29,9 +29,12 @@ public class Configs
     public static boolean disableOtherExplosionBlockDamage;
     public static boolean disableOtherExplosionItemDamage;
     public static boolean enableCreeperExplosionChainReaction;
+    public static boolean enableCreeperAltitudeCondition;
     public static boolean modifyCreeperExplosionDropChance;
     public static boolean modifyCreeperExplosionStrength;
     public static boolean modifyOtherExplosionDropChance;
+    public static double creeperAltitudeDamageMaxY;
+    public static double creeperAltitudeDamageMinY;
     public static double creeperChainReactionChance;
     public static double creeperChainReactionMaxDistance;
     public static double creeperExplosionBlockDropChance;
@@ -175,6 +178,10 @@ public class Configs
         prop = conf.get(CATEGORY_GENERIC, "disableOtherExplosionItemDamage", false);
         prop.setComment("Disable other explosions than Creepers from damaging items on the ground");
         disableOtherExplosionItemDamage = prop.getBoolean();
+
+        prop = conf.get(CATEGORY_GENERIC, "enableCreeperAltitudeCondition", false);
+        prop.setComment("Enable setting a y range for Creepers to do block damage.\nSet the range in 'creeperAltitudeDamageMaxY' and 'creeperAltitudeDamageMinY'.");
+        enableCreeperAltitudeCondition = prop.getBoolean();
 
         prop = conf.get(CATEGORY_GENERIC, "enableCreeperExplosionChainReaction", false);
         prop.setComment("When enabled, a Creeper exploding has a chance to trigger other nearby Creepers.");

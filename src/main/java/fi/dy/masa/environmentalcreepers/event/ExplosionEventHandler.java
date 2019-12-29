@@ -101,7 +101,10 @@ public class ExplosionEventHandler
                 this.removeItemEntities(event.getAffectedEntities(), true);
             }
 
-            if (Configs.disableCreeperExplosionBlockDamage)
+            if (Configs.disableCreeperExplosionBlockDamage ||
+                (Configs.enableCreeperAltitudeCondition &&
+                    (explosion.getPosition().y < Configs.creeperAltitudeDamageMinY ||
+                     explosion.getPosition().y > Configs.creeperAltitudeDamageMaxY)))
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Creeper'");
                 explosion.clearAffectedBlockPositions();
@@ -161,7 +164,7 @@ public class ExplosionEventHandler
 
         try
         {
-            boolean isSmoking = this.fieldIsSmoking.getBoolean(explosion);
+            boolean breakBlocks = this.fieldIsSmoking.getBoolean(explosion);
             boolean isFlaming = this.fieldIsFlaming.getBoolean(explosion);
             float explosionSize;
 
@@ -187,14 +190,17 @@ public class ExplosionEventHandler
 
             if (world instanceof WorldServer)
             {
-                this.doExplosionB(world, explosion, false, isCreeper, isSmoking, isFlaming, explosionSize);
+                Vec3d pos = explosion.getPosition();
 
-                if (isSmoking == false)
+                if (breakBlocks == false ||
+                    (isCreeper && Configs.enableCreeperAltitudeCondition &&
+                            (pos.y < Configs.creeperAltitudeDamageMinY ||
+                             pos.y > Configs.creeperAltitudeDamageMaxY)))
                 {
                     explosion.clearAffectedBlockPositions();
                 }
 
-                Vec3d pos = explosion.getPosition();
+                this.doExplosionB(world, explosion, false, isCreeper, breakBlocks, isFlaming, explosionSize);
 
                 for (EntityPlayer player : world.playerEntities)
                 {
@@ -208,7 +214,7 @@ public class ExplosionEventHandler
             }
             else
             {
-                this.doExplosionB(world, explosion, true, isCreeper, isSmoking, isFlaming, explosionSize);
+                this.doExplosionB(world, explosion, true, isCreeper, breakBlocks, isFlaming, explosionSize);
             }
         }
         catch (IllegalAccessException e)
@@ -223,14 +229,14 @@ public class ExplosionEventHandler
         event.setCanceled(true);
     }
 
-    private void doExplosionB(World world, Explosion explosion, boolean spawnParticles, boolean isCreeper, boolean isSmoking, boolean isFlaming, float explosionSize)
+    private void doExplosionB(World world, Explosion explosion, boolean spawnParticles, boolean isCreeper, boolean breakBlocks, boolean isFlaming, float explosionSize)
     {
         Vec3d pos = explosion.getPosition();
         Random rand = world.rand;
 
         world.playSound((EntityPlayer)null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 4.0F, (1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.2F) * 0.7F);
 
-        if (explosionSize >= 2.0F && isSmoking)
+        if (explosionSize >= 2.0F && breakBlocks)
         {
             world.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, pos.x, pos.y, pos.z, 1.0D, 0.0D, 0.0D, new int[0]);
         }
@@ -239,10 +245,10 @@ public class ExplosionEventHandler
             world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, pos.x, pos.y, pos.z, 1.0D, 0.0D, 0.0D, new int[0]);
         }
 
-        float dropChance = (float)(isCreeper ? Configs.creeperExplosionBlockDropChance : Configs.otherExplosionBlockDropChance);
+        float dropChance = (float) (isCreeper ? Configs.creeperExplosionBlockDropChance : Configs.otherExplosionBlockDropChance);
         EnvironmentalCreepers.logInfo("ExplosionEventHandler.doExplosionB() - Type: '{}', drop chance: {}", isCreeper ? "Creeper" : "Other", dropChance);
 
-        if (isSmoking)
+        if (breakBlocks)
         {
             for (BlockPos blockpos : explosion.getAffectedBlockPositions())
             {
