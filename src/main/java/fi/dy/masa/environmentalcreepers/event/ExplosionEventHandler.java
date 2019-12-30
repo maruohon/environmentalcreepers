@@ -104,7 +104,10 @@ public class ExplosionEventHandler
                 this.removeItemEntities(event.getAffectedEntities(), true);
             }
 
-            if (Configs.Toggles.disableCreeperExplosionBlockDamage)
+            if (Configs.Toggles.disableCreeperExplosionBlockDamage ||
+                (Configs.Toggles.enableCreeperAltitudeCondition &&
+                    (explosion.getPosition().y < Configs.Generic.creeperAltitudeDamageMinY ||
+                     explosion.getPosition().y > Configs.Generic.creeperAltitudeDamageMaxY)))
             {
                 EnvironmentalCreepers.logInfo("ExplosionEventHandler - clearAffectedBlockPositions() - Type: 'Creeper'");
                 explosion.clearAffectedBlockPositions();
@@ -192,14 +195,21 @@ public class ExplosionEventHandler
             if (world instanceof ServerWorld)
             {
                 ServerWorld serverWorld = (ServerWorld) world;
-                this.doExplosionB(world, explosion, mode, false, causesFire, explosionSize, isCreeper);
+                Vec3d pos = explosion.getPosition();
+
+                if (isCreeper && Configs.Toggles.enableCreeperAltitudeCondition &&
+                        (pos.y < Configs.Generic.creeperAltitudeDamageMinY ||
+                         pos.y > Configs.Generic.creeperAltitudeDamageMaxY))
+                {
+                    mode = Explosion.Mode.NONE;
+                }
 
                 if (mode == Explosion.Mode.NONE)
                 {
                     explosion.clearAffectedBlockPositions();
                 }
 
-                Vec3d pos = explosion.getPosition();
+                this.doExplosionB(world, explosion, mode, false, causesFire, explosionSize, isCreeper);
 
                 for (PlayerEntity player : serverWorld.getPlayers())
                 {

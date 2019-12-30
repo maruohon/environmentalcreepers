@@ -40,6 +40,8 @@ public class Configs
         private static boolean usePerWorldConfig;
         public static boolean verboseLogging;
 
+        public static double creeperAltitudeDamageMaxY;
+        public static double creeperAltitudeDamageMinY;
         public static double creeperChainReactionChance;
         public static double creeperChainReactionMaxDistance;
         public static double creeperExplosionBlockDropChance;
@@ -55,6 +57,7 @@ public class Configs
         public static boolean disableCreeperExplosionItemDamage;
         public static boolean disableOtherExplosionBlockDamage;
         public static boolean disableOtherExplosionItemDamage;
+        public static boolean enableCreeperAltitudeCondition;
         public static boolean enableCreeperExplosionChainReaction;
         public static boolean modifyCreeperExplosionDropChance;
         public static boolean modifyCreeperExplosionStrength;
@@ -96,6 +99,14 @@ public class Configs
         COMMON_BUILDER.comment(" If true, then the global config file is copied to the world\n" +
                                " (in worldname/environmentalcreepers/environmentalcreepers.cfg), if one doesn't exist there yet.")
                       .define("copyConfigToWorld", false);
+
+        COMMON_BUILDER.comment(" The maximum y position where Creeper explosions will do block damage,\n" +
+                               " if enableCreeperAltitudeCondition is enabled.")
+                      .defineInRange("creeperAltitudeDamageMaxY", 64.0, -30000000.0, 30000000.0);
+
+        COMMON_BUILDER.comment(" The minimum y position where Creeper explosions will do block damage,\n" +
+                               " if enableCreeperAltitudeCondition is enabled.")
+                      .defineInRange("creeperAltitudeDamageMinY", -64.0, -30000000.0, 30000000.0);
 
         COMMON_BUILDER.comment(" The chance of Creeper explosions to cause other Creepers to trigger\n" +
                                " within range. Set to 1.0 to always trigger.")
@@ -149,6 +160,10 @@ public class Configs
 
         COMMON_BUILDER.comment(" Disable other explosions than Creepers from damaging items on the ground")
                       .define("disableOtherExplosionItemDamage", false);
+
+        COMMON_BUILDER.comment(" Enable setting a y range for Creepers to do block damage.\n" +
+                               " Set the range in Generic -> 'creeperAltitudeDamageMaxY' and 'creeperAltitudeDamageMinY'.")
+                      .define("enableCreeperAltitudeCondition", false);
 
         COMMON_BUILDER.comment(" When enabled, a Creeper exploding has a chance to trigger other nearby Creepers.")
                       .define("enableCreeperExplosionChainReaction", false);
