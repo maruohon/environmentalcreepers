@@ -316,7 +316,7 @@ public class Configs
     }
 
     @SubscribeEvent
-    public static void onConfigReload(final ModConfig.ConfigReloading event)
+    public static void onConfigReload(final ModConfig.Reloading event)
     {
         //System.out.printf("*** ModConfig.ConfigReloading\n");
         setConfigValues(COMMON_CONFIG);
