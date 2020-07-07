@@ -3,9 +3,7 @@ package fi.dy.masa.environmentalcreepers;
 import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import fi.dy.masa.environmentalcreepers.commands.CommandReloadConfig;
-import fi.dy.masa.environmentalcreepers.config.Configs;
-import fi.dy.masa.environmentalcreepers.event.ExplosionEventHandler;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -17,6 +15,9 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
+import fi.dy.masa.environmentalcreepers.commands.CommandReloadConfig;
+import fi.dy.masa.environmentalcreepers.config.Configs;
+import fi.dy.masa.environmentalcreepers.event.ExplosionEventHandler;
 
 @Mod(Reference.MOD_ID)
 public class EnvironmentalCreepers
@@ -63,7 +64,7 @@ public class EnvironmentalCreepers
 
     private void onServerAboutToStart(final FMLServerAboutToStartEvent event)
     {
-        File dataDir = event.getServer().getActiveAnvilConverter().getFile(event.getServer().getFolderName(), Reference.MOD_ID);
+        File dataDir = event.getServer().func_240776_a_(new FolderName(Reference.MOD_ID)).toFile();
         Configs.loadConfigsFromPerWorldConfigIfExists(dataDir);
     }
 
