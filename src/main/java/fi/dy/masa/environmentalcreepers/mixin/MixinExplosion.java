@@ -79,12 +79,12 @@ public class MixinExplosion
 
         if (Configs.Toggles.DISABLE_ALL_EXPLOSIONS.getValue())
         {
+            EnvironmentalCreepers.logInfo("MixinExplosion.disableExplosionCompletely2(), type: '{}'", (this.entity instanceof CreeperEntity) ? "Creeper" : "Other");
             ci.cancel();
         }
     }
 
-    @Inject(method = "collectBlocksAndDamageEntities", at = @At(value = "INVOKE", remap = false, shift = At.Shift.AFTER,
-            target = "Ljava/util/List;addAll(Ljava/util/Collection;)Z"), cancellable = true)
+    @Inject(method = "affectWorld", at = @At("HEAD"), cancellable = true)
     private void disableExplosionBlockDamage(CallbackInfo ci)
     {
         if (this.entity instanceof CreeperEntity)
