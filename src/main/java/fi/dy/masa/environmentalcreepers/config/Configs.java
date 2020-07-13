@@ -1,369 +1,229 @@
 package fi.dy.masa.environmentalcreepers.config;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import com.electronwill.nightconfig.core.io.WritingMode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import net.minecraft.entity.Entity;
-import net.minecraft.world.Explosion;
+import net.minecraft.world.explosion.Explosion;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
-import fi.dy.masa.environmentalcreepers.Reference;
-import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
+import fi.dy.masa.environmentalcreepers.config.options.ConfigBoolean;
+import fi.dy.masa.environmentalcreepers.config.options.ConfigDouble;
+import fi.dy.masa.environmentalcreepers.config.options.ConfigString;
+import fi.dy.masa.environmentalcreepers.config.options.ConfigStringList;
+import fi.dy.masa.environmentalcreepers.config.options.IConfigBase;
+import fi.dy.masa.environmentalcreepers.util.JsonUtils;
 
-@Mod.EventBusSubscriber
 public class Configs
 {
-    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_BLACKLIST = new HashSet<Class<? extends Explosion>>();
-    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_WHITELIST = new HashSet<Class<? extends Explosion>>();
-    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_BLACKLIST = new HashSet<Class<? extends Entity>>();
-    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_WHITELIST = new HashSet<Class<? extends Entity>>();
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_BLACKLIST = new HashSet<>();
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_WHITELIST = new HashSet<>();
+    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_BLACKLIST = new HashSet<>();
+    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_WHITELIST = new HashSet<>();
 
     public static final String CATEGORY_GENERIC = "Generic";
     public static final String CATEGORY_LISTS = "Lists";
     public static final String CATEGORY_TOGGLES = "Toggles";
 
-    private static final ForgeConfigSpec.Builder COMMON_BUILDER = new ForgeConfigSpec.Builder();
-    public static ForgeConfigSpec COMMON_CONFIG;
-
     public static class Generic
     {
-        private static boolean copyConfigToWorld;
-        private static boolean usePerWorldConfig;
-        public static boolean verboseLogging;
+        public static final ConfigBoolean COPY_CONFIG_TO_WORLD                  = new ConfigBoolean("copyConfigToWorld", false, "If true, then the global config file is copied to the world (in worldname/environmentalcreepers/environmentalcreepers.json), if one doesn't exist there yet.");
+        public static final ConfigDouble CREEPER_ALTITUDE_DAMAGE_MAX_Y          = new ConfigDouble("creeperAltitudeDamageMaxY", 64.0, -30000000.0, 30000000.0, "The maximum y position where Creeper explosions will do block damage, if enableCreeperAltitudeCondition is enabled.");
+        public static final ConfigDouble CREEPER_ALTITUDE_DAMAGE_MIN_Y          = new ConfigDouble("creeperAltitudeDamageMinY", -64.0, -30000000.0, 30000000.0, "The minimum y position where Creeper explosions will do block damage, if enableCreeperAltitudeCondition is enabled.");
+        public static final ConfigDouble CREEPER_CHAIN_REACTION_CHANCE          = new ConfigDouble("creeperChainReactionChance", 1.0, 0.0, 1.0, "The chance of Creeper explosions to cause other Creepers to trigger within range. Set to 1.0 to always trigger.");
+        public static final ConfigDouble CREEPER_CHAIN_REACTION_MAX_DISTANCE    = new ConfigDouble("creeperChainReactionMaxDistance", 16.0, 0.0, 160.0, "The maximum distance within which a Creeper exploding will cause a chain reaction.");
+        public static final ConfigDouble CREEPER_EXPLOSION_BLOCK_DROP_CHANCE    = new ConfigDouble("creeperExplosionBlockDropChance", 1.0, 0.0, 1.0, "The chance of Creeper explosions to drop the blocks as items. Set to 1.0 to always drop.");
+        public static final ConfigDouble CREEPER_EXPLOSION_STRENGTH_CHARGED     = new ConfigDouble("creeperExplosionStrengthCharged", 6.0, 0.0, 1000.0, "The strength of Charged Creeper explosions. Default in vanilla: 6.0 (double of normal Creepers).");
+        public static final ConfigDouble CREEPER_EXPLOSION_STRENGTH_NORMAL      = new ConfigDouble("creeperExplosionStrengthNormal", 3.0, 0.0, 1000.0, "The strength of Creeper explosions. Default in vanilla in 3.0 for normal Creepers, and it is doubled ie. 6.0 for Charged Creepers.");
+        public static final ConfigDouble OTHER_EXPLOSION_BLOCK_DROP_CHANCE      = new ConfigDouble("otherExplosionBlockDropChance", 1.0, 0.0, 1.0, "The chance of other explosions than Creepers to drop the blocks as items. Set to 1.0 to always drop.");
+        public static final ConfigBoolean USE_PER_WORLD_CONFIG                  = new ConfigBoolean("usePerWorldConfig", false, "If true, then configs are attempted to be read from a config inside the world (in worldname/environmentalcreepers/environmentalcreepers.json), if one exists there.");
+        public static final ConfigBoolean VERBOSE_LOGGING                       = new ConfigBoolean("verboseLogging", false, "Log some messages on each explosion, for debugging purposes. Leave disabled for normal use.");
 
-        public static double creeperAltitudeDamageMaxY;
-        public static double creeperAltitudeDamageMinY;
-        public static double creeperChainReactionChance;
-        public static double creeperChainReactionMaxDistance;
-        public static double creeperExplosionBlockDropChance;
-        public static double creeperExplosionStrengthNormal;
-        public static double creeperExplosionStrengthCharged;
-        public static double otherExplosionBlockDropChance;
+        private static final List<? extends IConfigBase> OPTIONS = ImmutableList.of(
+                COPY_CONFIG_TO_WORLD,
+                CREEPER_ALTITUDE_DAMAGE_MAX_Y,
+                CREEPER_ALTITUDE_DAMAGE_MIN_Y,
+                CREEPER_CHAIN_REACTION_CHANCE,
+                CREEPER_CHAIN_REACTION_MAX_DISTANCE,
+                CREEPER_EXPLOSION_BLOCK_DROP_CHANCE,
+                CREEPER_EXPLOSION_STRENGTH_CHARGED,
+                CREEPER_EXPLOSION_STRENGTH_NORMAL,
+                OTHER_EXPLOSION_BLOCK_DROP_CHANCE,
+                USE_PER_WORLD_CONFIG,
+                VERBOSE_LOGGING
+        );
     }
 
     public static class Toggles
     {
-        public static boolean disableCreeperExplosionBlockDamage;
-        public static boolean disableCreeperExplosionCompletely;
-        public static boolean disableCreeperExplosionItemDamage;
-        public static boolean disableOtherExplosionBlockDamage;
-        public static boolean disableOtherExplosionItemDamage;
-        public static boolean enableCreeperAltitudeCondition;
-        public static boolean enableCreeperExplosionChainReaction;
-        public static boolean modifyCreeperExplosionDropChance;
-        public static boolean modifyCreeperExplosionStrength;
-        public static boolean modifyOtherExplosionDropChance;
+        public static final ConfigBoolean DISABLE_ALL_EXPLOSIONS                    = new ConfigBoolean("disableAllExplosions", false, "Completely disables all explosions");
+        public static final ConfigBoolean DISABLE_CREEPER_EXPLOSION_BLOCK_DAMAGE    = new ConfigBoolean("disableCreeperExplosionBlockDamage", false, "Completely disable Creeper explosion from damaging blocks");
+        public static final ConfigBoolean DISABLE_CREEPER_EXPLOSION_ENTIRELY        = new ConfigBoolean("disableCreeperExplosionCompletely", false, "Completely disable Creepers from exploding");
+        public static final ConfigBoolean DISABLE_CREEPER_EXPLOSION_ENTITY_DAMAGE   = new ConfigBoolean("disableCreeperExplosionEntityDamage", false, "Disable Creeper explosions from damaging any entities (including items)");
+        public static final ConfigBoolean DISABLE_CREEPER_EXPLOSION_ITEM_DAMAGE     = new ConfigBoolean("disableCreeperExplosionItemDamage", false, "Disable Creeper explosions from damaging items on the ground");
+        public static final ConfigBoolean DISABLE_OTHER_EXPLOSION_BLOCK_DAMAGE      = new ConfigBoolean("disableOtherExplosionBlockDamage", false, "Completely disable other explosions than Creepers from damaging blocks");
+        public static final ConfigBoolean DISABLE_OTHER_EXPLOSION_ENTITY_DAMAGE     = new ConfigBoolean("disableOtherExplosionEntityDamage", false, "Disable other explosions than Creepers from damaging any entities (including items)");
+        public static final ConfigBoolean DISABLE_OTHER_EXPLOSION_ITEM_DAMAGE       = new ConfigBoolean("disableOtherExplosionItemDamage", false, "Disable other explosions than Creepers from damaging items on the ground");
+        public static final ConfigBoolean CREEPER_ALTITUDE_CONDITION                = new ConfigBoolean("creeperAltitudeCondition", false, "Enable setting a y range for Creepers to do block damage. Set the range in Generic -> 'creeperAltitudeDamageMaxY' and 'creeperAltitudeDamageMinY'.");
+        public static final ConfigBoolean CREEPER_EXPLOSION_CHAIN_REACTION          = new ConfigBoolean("enableCreeperExplosionChainReaction", false, "When enabled, a Creeper exploding has a chance to trigger other nearby Creepers.");
+        public static final ConfigBoolean MODIFY_CREEPER_EXPLOSION_DROP_CHANCE      = new ConfigBoolean("modifyCreeperExplosionDropChance", true, "Modify the chance of Creeper explosions to drop the blocks as items. Set the chance in Generic -> creeperExplosionBlockDropChance.");
+        public static final ConfigBoolean MODIFY_CREEPER_EXPLOSION_STRENGTH         = new ConfigBoolean("modifyCreeperExplosionStrength", false, "Modify the strength of Creeper explosions.");
+        public static final ConfigBoolean MODIFY_OTHER_EXPLOSION_DROP_CHANCE        = new ConfigBoolean("modifyOtherExplosionDropChance", false, "Modify the chance of other explosions than Creepers to drop the blocks as items. Set the chance in Generic -> otherExplosionBlockDropChance.");
+
+        private static final List<? extends IConfigBase> OPTIONS = ImmutableList.of(
+                DISABLE_ALL_EXPLOSIONS,
+                DISABLE_CREEPER_EXPLOSION_BLOCK_DAMAGE,
+                DISABLE_CREEPER_EXPLOSION_ENTIRELY,
+                DISABLE_CREEPER_EXPLOSION_ENTITY_DAMAGE,
+                DISABLE_CREEPER_EXPLOSION_ITEM_DAMAGE,
+                DISABLE_OTHER_EXPLOSION_BLOCK_DAMAGE,
+                DISABLE_OTHER_EXPLOSION_ENTITY_DAMAGE,
+                DISABLE_OTHER_EXPLOSION_ITEM_DAMAGE,
+                CREEPER_ALTITUDE_CONDITION,
+                CREEPER_EXPLOSION_CHAIN_REACTION,
+                MODIFY_CREEPER_EXPLOSION_DROP_CHANCE,
+                MODIFY_CREEPER_EXPLOSION_STRENGTH,
+                MODIFY_OTHER_EXPLOSION_DROP_CHANCE
+        );
     }
 
     public static class Lists
     {
+        private static final ConfigString     ENTITY_CLASS_LIST_TYPE            = new ConfigString("entityClassListType", "blacklist", "The list type for the entity class filtering. Either 'none' or 'blacklist' or 'whitelist'. Blacklisted (or non-whitelisted) entities will not be removed from the explosion damage list. This allows for example those entities to run their custom code when damaged by explosions.");
+        private static final ConfigStringList ENTITY_BLACKLIST_CLASS_NAMES      = new ConfigStringList("entityBlacklistClassNames", ImmutableList.of(), "A list of full class names of entities that should be ignored. This means that these entities will not get removed from the list of entities to be damaged by the explosion, allowing these entities to handle the explosion code themselves. Used if entityClassListType = blacklist");
+        private static final ConfigStringList ENTITY_WHITELIST_CLASS_NAMES      = new ConfigStringList("entityWhitelistClassNames", ImmutableList.of(), "A list of full class names of entities that are the only ones\n that should be acted on, see the comment on entityTypeBlacklist. Used if entityClassListType = whitelist");
+        private static final ConfigString     EXPLOSION_CLASS_LIST_TYPE         = new ConfigString("explosionClassListType", "blacklist", "The list type for the explosion class filtering. Either 'none' or 'blacklist' or 'whitelist'. Blacklisted (or non-whitelisted) explosion types won't be handled by this mod.");
+        private static final ConfigStringList EXPLOSION_BLACKLIST_CLASS_NAMES   = new ConfigStringList("explosionBlacklistClassNames", ImmutableList.of(), "A list of full class names of explosions that should be ignored. Used if explosionClassListType = blacklist");
+        private static final ConfigStringList EXPLOSION_WHITELIST_CLASS_NAMES   = new ConfigStringList("explosionWhitelistClassNames", ImmutableList.of(), "A list of full class names of explosions that are the only ones that should be acted on. Used if explosionClassListType = whitelist");
+
+        private static final List<? extends IConfigBase> OPTIONS = ImmutableList.of(
+                ENTITY_CLASS_LIST_TYPE,
+                ENTITY_BLACKLIST_CLASS_NAMES,
+                ENTITY_WHITELIST_CLASS_NAMES
+                /*
+                EXPLOSION_CLASS_LIST_TYPE,
+                EXPLOSION_BLACKLIST_CLASS_NAMES,
+                EXPLOSION_WHITELIST_CLASS_NAMES
+                */
+        );
+
         public static ListType explosionClassListType = ListType.NONE;
         public static ListType entityClassListType = ListType.NONE;
-
-        private static List<String> entityBlacklistClassNames = ImmutableList.of();
-        private static List<String> entityWhitelistClassNames = ImmutableList.of();
-        private static List<String> explosionBlacklistClassNames = ImmutableList.of();
-        private static List<String> explosionWhitelistClassNames = ImmutableList.of();
     }
 
-    private static File configFileGlobal;
-    private static Path lastLoadedConfig;
+    private static File globalConfigDirectory = new File("config");
+    private static File worldConfigDirectory;
+    private static File lastLoadedConfigDirectory;
 
-    static
+    private static Map<String, List<? extends IConfigBase>> getConfigsPerCategories()
     {
-        setupConfigs();
+        return ImmutableMap.of(CATEGORY_GENERIC, Generic.OPTIONS, CATEGORY_TOGGLES, Toggles.OPTIONS, CATEGORY_LISTS, Lists.OPTIONS);
     }
 
-    private static void setupConfigs()
+    private static void clearOldValues()
     {
-        addCategoryGeneric();
-        addCategoryToggles();
-        addCategoryLists();
+        Lists.entityClassListType    = ListType.NONE;
+        Lists.explosionClassListType = ListType.NONE;
 
-        COMMON_CONFIG = COMMON_BUILDER.build();
-    }
+        EXPLOSION_ENTITY_BLACKLIST.clear();
+        EXPLOSION_ENTITY_WHITELIST.clear();
 
-    private static void addCategoryGeneric()
-    {
-        COMMON_BUILDER.comment(" Generic configs").push(CATEGORY_GENERIC);
+        EXPLOSION_CLASS_BLACKLIST.clear();
+        EXPLOSION_CLASS_WHITELIST.clear();
 
-        COMMON_BUILDER.comment(" If true, then the global config file is copied to the world\n" +
-                               " (in worldname/environmentalcreepers/environmentalcreepers.cfg), if one doesn't exist there yet.")
-                      .define("copyConfigToWorld", false);
-
-        COMMON_BUILDER.comment(" The maximum y position where Creeper explosions will do block damage,\n" +
-                               " if enableCreeperAltitudeCondition is enabled.")
-                      .defineInRange("creeperAltitudeDamageMaxY", 64.0, -30000000.0, 30000000.0);
-
-        COMMON_BUILDER.comment(" The minimum y position where Creeper explosions will do block damage,\n" +
-                               " if enableCreeperAltitudeCondition is enabled.")
-                      .defineInRange("creeperAltitudeDamageMinY", -64.0, -30000000.0, 30000000.0);
-
-        COMMON_BUILDER.comment(" The chance of Creeper explosions to cause other Creepers to trigger\n" +
-                               " within range. Set to 1.0 to always trigger.")
-                      .defineInRange("creeperChainReactionChance", 1.0, 0.0, 1.0);
-
-        COMMON_BUILDER.comment(" The maximum distance within which a Creeper exploding will cause a chain reaction.")
-                      .defineInRange("creeperChainReactionMaxDistance", 16.0, 0.0, 160.0);
-
-        COMMON_BUILDER.comment(" The chance of Creeper explosions to drop the blocks as items.\n" +
-                               " Set to 1.0 to always drop.")
-                      .defineInRange("creeperExplosionBlockDropChance", 1.0, 0.0, 1.0);
-
-        COMMON_BUILDER.comment(" The strength of Creeper explosions. Default in vanilla in 3.0 for normal Creepers,\n" +
-                               " and it is doubled ie. 6.0 for Charged Creepers.")
-                      .defineInRange("creeperExplosionStrengthNormal", 3.0, 0.0, 1000.0);
-
-        COMMON_BUILDER.comment(" The strength of Charged Creeper explosions.\n" +
-                               " Default in vanilla: 6.0 (double of normal Creepers).")
-                      .defineInRange("creeperExplosionStrengthCharged", 6.0, 0.0, 1000.0);
-
-        COMMON_BUILDER.comment(" The chance of other explosions than Creepers to drop the blocks as items.\n" +
-                               " Set to 1.0 to always drop.")
-                      .defineInRange("otherExplosionBlockDropChance", 1.0, 0.0, 1.0);
-
-        COMMON_BUILDER.comment(" If true, then configs are attempted to be read from a config inside\n" +
-                               " the world (in worldname/environmentalcreepers/environmentalcreepers.cfg), if one exists there.")
-                      .define("usePerWorldConfig", false);
-
-        COMMON_BUILDER.comment(" Log some messages on each explosion, for debugging purposes.\n" +
-                               " Leave disabled for normal use.")
-                      .define("verboseLogging", false);
-
-        COMMON_BUILDER.pop();
-    }
-
-    private static void addCategoryToggles()
-    {
-        COMMON_BUILDER.comment(" Toggle options to enable/disable features").push(CATEGORY_TOGGLES);
-
-        COMMON_BUILDER.comment(" Completely disable Creeper explosion from damaging blocks")
-                      .define("disableCreeperExplosionBlockDamage", false);
-
-        COMMON_BUILDER.comment(" Completely disable Creepers from exploding")
-                      .define("disableCreeperExplosionCompletely", false);
-
-        COMMON_BUILDER.comment(" Disable Creeper explosions from damaging items on the ground")
-                      .define("disableCreeperExplosionItemDamage", false);
-
-        COMMON_BUILDER.comment(" Completely disable other explosions than Creepers from damaging blocks")
-                      .define("disableOtherExplosionBlockDamage", false);
-
-        COMMON_BUILDER.comment(" Disable other explosions than Creepers from damaging items on the ground")
-                      .define("disableOtherExplosionItemDamage", false);
-
-        COMMON_BUILDER.comment(" Enable setting a y range for Creepers to do block damage.\n" +
-                               " Set the range in Generic -> 'creeperAltitudeDamageMaxY' and 'creeperAltitudeDamageMinY'.")
-                      .define("enableCreeperAltitudeCondition", false);
-
-        COMMON_BUILDER.comment(" When enabled, a Creeper exploding has a chance to trigger other nearby Creepers.")
-                      .define("enableCreeperExplosionChainReaction", false);
-
-        COMMON_BUILDER.comment(" Modify the chance of Creeper explosions to drop the blocks as items.\n" +
-                               " Set the chance in creeperExplosionBlockDropChance.")
-                      .define("modifyCreeperExplosionDropChance", true);
-
-        COMMON_BUILDER.comment(" Modify the strength of Creeper explosions.")
-                      .define("modifyCreeperExplosionStrength", false);
-
-        COMMON_BUILDER.comment(" Modify the chance of other explosions than Creepers to drop the blocks\n" +
-                               " as items. Set the chance in otherExplosionBlockDropChance.")
-                      .define("modifyOtherExplosionDropChance", false);
-
-        COMMON_BUILDER.pop();
-    }
-
-    private static void addCategoryLists()
-    {
-        COMMON_BUILDER.comment(" Explosion type, entity type etc. black- and white lists").push(CATEGORY_LISTS);
-
-        COMMON_BUILDER.comment(" The list type for the entity class filtering.\n" +
-                               " Either 'none' or 'blacklist' or 'whitelist'.\n" + 
-                               " Blacklisted (or non-whitelisted) entities will not be removed from the explosion damage list.\n" + 
-                               " This allows for example those entities to run their custom code when damaged by explosions.")
-                      .define("entityClassListType", "blacklist");
-
-        COMMON_BUILDER.comment(" The list type for the explosion class filtering.\n" +
-                               " Either 'none' or 'blacklist' or 'whitelist'.\n" + 
-                               " Blacklisted (or non-whitelisted) explosion types won't be handled by this mod.")
-                      .define("explosionClassListType", "blacklist");
-
-        COMMON_BUILDER.comment(" A list of full class names of entities that should be ignored.\n" +
-                               " This means that these entities will not get removed from the\n" +
-                               " list of entities to be damaged by the explosion, allowing these\n" +
-                               " entities to handle the explosion code themselves.\n" +
-                               " Used if entityClassListType = blacklist")
-                      .defineList("entityBlacklistClassNames", ImmutableList.of("appeng.entity.EntitySingularity"), (val) -> true);
-
-        COMMON_BUILDER.comment(" A list of full class names of entities that are the only ones\n" +
-                               " that should be acted on, see the comment on entityTypeBlacklist.\n" +
-                               " Used if entityClassListType = whitelist")
-                      .defineList("entityWhitelistClassNames", ImmutableList.of(), (val) -> true);
-
-        COMMON_BUILDER.comment(" A list of full class names of explosions that should be ignored.\n" +
-                               " Used if explosionClassListType = blacklist")
-                      .defineList("explosionBlacklistClassNames", ImmutableList.of("slimeknights.tconstruct.gadgets.entity.ExplosionEFLN"), (val) -> true);
-
-        COMMON_BUILDER.comment(" A list of full class names of explosions that are the only ones that should be acted on.\n" +
-                               " Used if explosionClassListType = whitelist")
-                      .defineList("explosionWhitelistClassNames", ImmutableList.of(), (val) -> true);
-
-        COMMON_BUILDER.pop();
-    }
-
-    private static void setConfigValues(ForgeConfigSpec spec)
-    {
-        setValuesInClass(Generic.class, spec);
-        setValuesInClass(Toggles.class, spec);
-        setValuesInClass(Lists.class, spec);
-
-        setListType(Lists.class, spec, "entityClassListType");
-        setListType(Lists.class, spec, "explosionClassListType");
-
-        clearAndSetEntityClasses(EXPLOSION_ENTITY_BLACKLIST, Lists.entityBlacklistClassNames);
-        clearAndSetEntityClasses(EXPLOSION_ENTITY_WHITELIST, Lists.entityWhitelistClassNames);
-
-        clearAndSetExplosionClasses(EXPLOSION_CLASS_BLACKLIST, Lists.explosionBlacklistClassNames);
-        clearAndSetExplosionClasses(EXPLOSION_CLASS_WHITELIST, Lists.explosionWhitelistClassNames);
-
-        if (Toggles.disableCreeperExplosionCompletely)
+        for (Map.Entry<String, List<? extends IConfigBase>> entry : getConfigsPerCategories().entrySet())
         {
-            CreeperEventHandler.getInstance().register();
+            entry.getValue().forEach(IConfigBase::resetToDefault);
+        }
+    }
+
+    private static void onPostLoad()
+    {
+        Lists.entityClassListType    = getListType(Lists.ENTITY_CLASS_LIST_TYPE);
+        Lists.explosionClassListType = getListType(Lists.EXPLOSION_CLASS_LIST_TYPE);
+
+        clearAndSetEntityClasses(EXPLOSION_ENTITY_BLACKLIST, Lists.ENTITY_BLACKLIST_CLASS_NAMES.getValue());
+        clearAndSetEntityClasses(EXPLOSION_ENTITY_WHITELIST, Lists.ENTITY_WHITELIST_CLASS_NAMES.getValue());
+
+        clearAndSetExplosionClasses(EXPLOSION_CLASS_BLACKLIST, Lists.EXPLOSION_BLACKLIST_CLASS_NAMES.getValue());
+        clearAndSetExplosionClasses(EXPLOSION_CLASS_WHITELIST, Lists.EXPLOSION_WHITELIST_CLASS_NAMES.getValue());
+    }
+
+    private static ListType getListType(ConfigString config)
+    {
+        String configValue = config.getValue();
+
+        if (ListType.BLACKLIST.name().equalsIgnoreCase(configValue))
+        {
+            return ListType.BLACKLIST;
+        }
+        else if (ListType.WHITELIST.name().equalsIgnoreCase(configValue))
+        {
+            return ListType.WHITELIST;
+        }
+        else if (ListType.NONE.name().equalsIgnoreCase(configValue))
+        {
+            return ListType.NONE;
         }
         else
         {
-            CreeperEventHandler.getInstance().unregister();
+            EnvironmentalCreepers.logger.error("Invalid list type '{}' for config '{}'", configValue, config.getName());
+            return ListType.NONE;
         }
     }
 
-    private static void setValuesInClass(Class<?> clazz, ForgeConfigSpec spec)
+    public static void setGlobalConfigDir(File dir)
     {
-        for (Field field : clazz.getDeclaredFields())
+        if (dir.exists() == false && dir.mkdirs() == false)
         {
-            String category = clazz.getSimpleName();
-            String name = field.getName();
+            EnvironmentalCreepers.logger.error("Failed to create config directory '{}'", dir.getName());
+            return;
+        }
 
-            try
-            {
-                Class<?> type = field.getType();
-                field.setAccessible(true);
+        globalConfigDirectory = dir;
+    }
 
-                if (type == boolean.class)
-                {
-                    field.set(null, spec.getValues().<ForgeConfigSpec.BooleanValue>get(category + "." + name).get().booleanValue());
-                }
-                else if (type == double.class)
-                {
-                    field.set(null, spec.getValues().<ForgeConfigSpec.DoubleValue>get(category + "." + name).get().doubleValue());
-                }
-                else if (type == String.class)
-                {
-                    field.set(null, spec.getValues().<ForgeConfigSpec.ConfigValue<String>>get(category + "." + name).get());
-                }
-                else if (List.class.isAssignableFrom(type))
-                {
-                    field.set(null, spec.getValues().<ForgeConfigSpec.ConfigValue<List<String>>>get(category + "." + name).get());
-                }
-            }
-            catch (Exception e)
+    public static void setWorldConfigDir(File dir)
+    {
+        if (Generic.COPY_CONFIG_TO_WORLD.getValue() || Generic.USE_PER_WORLD_CONFIG.getValue())
+        {
+            if (dir.exists() == false && dir.mkdirs() == false)
             {
-                EnvironmentalCreepers.logger.error("Failed to set config value for config '{}.{}'", category, name);
+                EnvironmentalCreepers.logger.error("Failed to create config directory '{}'", dir.getName());
+                return;
             }
+
+            worldConfigDirectory = dir;
         }
     }
 
-    private static void setListType(Class<?> clazz, ForgeConfigSpec spec, String name)
+    public static void loadConfigsFromGlobalConfigFile()
     {
-        String category = clazz.getSimpleName();
+        loadConfigsFromDirectory(globalConfigDirectory);
+    }
 
-        try
+    public static void loadConfigsFromPerWorldConfigIfApplicable()
+    {
+        @Nullable File dir = worldConfigDirectory;
+
+        if (dir != null)
         {
-            String strVal = spec.getValues().<ForgeConfigSpec.ConfigValue<String>>get(category + "." + name).get();
-            ListType type = ListType.NONE;
-
-            if (ListType.BLACKLIST.name().equalsIgnoreCase(strVal))
+            if (Generic.COPY_CONFIG_TO_WORLD.getValue())
             {
-                type = ListType.BLACKLIST;
-            }
-            else if (ListType.WHITELIST.name().equalsIgnoreCase(strVal))
-            {
-                type = ListType.WHITELIST;
-            }
-
-            Field field = clazz.getDeclaredField(name);
-            field.set(null, type);
-        }
-        catch (Exception e)
-        {
-            EnvironmentalCreepers.logger.error("Failed to set config value for config '{}.{}'", category, name);
-        }
-    }
-
-    @SubscribeEvent
-    public static void onConfigLoad(final ModConfig.Loading event)
-    {
-        //System.out.printf("*** ModConfig.Loading\n");
-        setConfigValues(COMMON_CONFIG);
-    }
-
-    @SubscribeEvent
-    public static void onConfigReload(final ModConfig.Reloading event)
-    {
-        //System.out.printf("*** ModConfig.ConfigReloading\n");
-        setConfigValues(COMMON_CONFIG);
-    }
-
-    public static void loadConfig(Path path)
-    {
-        EnvironmentalCreepers.logInfo("Reloading the configs from file '{}'", path.toAbsolutePath().toString());
-
-        ForgeConfigSpec spec = COMMON_CONFIG;
-        final CommentedFileConfig configData = CommentedFileConfig.builder(path)
-                .sync()
-                .autosave()
-                .writingMode(WritingMode.REPLACE)
-                .build();
-
-        configData.load();
-        spec.setConfig(configData);
-
-        setConfigValues(spec);
-
-        lastLoadedConfig = path;
-    }
-
-    public static void setGlobalConfigDirAndLoadConfigs(File configDirCommon)
-    {
-        File configFile = new File(configDirCommon, Reference.MOD_ID + ".toml");
-        configFileGlobal = configFile;
-
-        loadConfigsFromGlobalConfigFile();
-    }
-
-    public static void loadConfigsFromPerWorldConfigIfExists(@Nullable File configDir)
-    {
-        if (configDir != null)
-        {
-            File configFile = new File(configDir, Reference.MOD_ID + ".toml");
-
-            if (Generic.copyConfigToWorld)
-            {
-                ConfigFileUtils.createDirIfNotExists(configDir);
-                ConfigFileUtils.tryCopyConfigIfMissing(configFile, configFileGlobal);
+                File globalConfigFile = new File(globalConfigDirectory, getConfigFileName());
+                File configFile = new File(dir, getConfigFileName());
+                ConfigFileUtils.createDirIfMissing(dir);
+                ConfigFileUtils.copyFileIfMissing(globalConfigFile, configFile);
             }
 
-            if (Generic.usePerWorldConfig && configFile.exists() && configFile.isFile() && configFile.canRead())
+            if (Generic.USE_PER_WORLD_CONFIG.getValue() && dir.exists() && dir.isDirectory())
             {
-                loadConfig(configFile.toPath());
+                loadConfigsFromDirectory(dir);
                 return;
             }
         }
@@ -372,17 +232,26 @@ public class Configs
         loadConfigsFromGlobalConfigFile();
     }
 
-    public static void loadConfigsFromGlobalConfigFile()
-    {
-        loadConfig(configFileGlobal.toPath());
-    }
-
     public static boolean reloadConfig()
     {
-        if (lastLoadedConfig != null)
+        if (lastLoadedConfigDirectory != null)
         {
-            loadConfig(lastLoadedConfig);
-            return true;
+            return loadConfigsFromDirectory(lastLoadedConfigDirectory);
+        }
+
+        return false;
+    }
+
+    private static boolean loadConfigsFromDirectory(@Nullable File dir)
+    {
+        if (dir != null)
+        {
+            lastLoadedConfigDirectory = dir;
+            File file = new File(dir, getConfigFileName());
+
+            EnvironmentalCreepers.logInfo("Reloading the configs from file '{}'", file.getAbsolutePath());
+
+            return loadConfigsFromFile(file);
         }
 
         return false;
@@ -442,7 +311,73 @@ public class Configs
         }
     }
 
-    public static enum ListType
+    public static boolean loadConfigsFromFile(File configFile)
+    {
+        clearOldValues();
+
+        boolean success = false;
+
+        if (configFile.exists() && configFile.isFile() && configFile.canRead())
+        {
+            JsonElement element = JsonUtils.parseJsonFile(configFile);
+
+            if (element != null && element.isJsonObject())
+            {
+                JsonObject root = element.getAsJsonObject();
+
+                for (Map.Entry<String, List<? extends IConfigBase>> entry : getConfigsPerCategories().entrySet())
+                {
+                    ConfigUtils.readConfigBase(root, entry.getKey(), entry.getValue());
+                }
+
+                success = true;
+            }
+        }
+        else
+        {
+            // Create the config file when it doesn't exist yet
+            saveConfigs();
+        }
+
+        onPostLoad();
+
+        return success;
+    }
+
+    public static void saveConfigs()
+    {
+        File dir = lastLoadedConfigDirectory;
+
+        if (dir == null)
+        {
+            EnvironmentalCreepers.logger.error("No valid config directory set");
+            return;
+        }
+
+        if (dir.exists() == false && dir.mkdirs() == false)
+        {
+            EnvironmentalCreepers.logger.error("Failed to create config directory '{}'", dir.getName());
+        }
+
+        if (dir.exists() && dir.isDirectory())
+        {
+            JsonObject root = new JsonObject();
+
+            for (Map.Entry<String, List<? extends IConfigBase>> entry : getConfigsPerCategories().entrySet())
+            {
+                ConfigUtils.writeConfigBase(root, entry.getKey(), entry.getValue());
+            }
+
+            JsonUtils.writeJsonToFile(root, new File(dir, getConfigFileName()));
+        }
+    }
+
+    public static String getConfigFileName()
+    {
+        return "environmentalcreepers.json";
+    }
+
+    public enum ListType
     {
         NONE        ("none"),
         BLACKLIST   ("blacklist"),
@@ -455,6 +390,7 @@ public class Configs
             this.name = name;
         }
 
+        /*
         public static ListType fromName(String name)
         {
             for (ListType val : values())
@@ -467,5 +403,6 @@ public class Configs
 
             return ListType.NONE;
         }
+        */
     }
 }

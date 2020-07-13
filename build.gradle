@@ -1,20 +1,20 @@
-
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
-        mavenCentral()
+        jcenter()    
+        maven {
+            name = "Fabric"
+            url = "https://maven.fabricmc.net/"
+        }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath 'net.fabricmc:fabric-loom:0.4-SNAPSHOT'
     }
 }
 
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'java'
+apply plugin: "fabric-loom"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 ext.configFile = file "build.properties"
 
@@ -24,74 +24,35 @@ configFile.withReader {
     project.ext.config = new ConfigSlurper().parse prop
 }
 
+dependencies {
+    minecraft "com.mojang:minecraft:${config.minecraft_version}"
+    mappings "net.fabricmc:yarn:${config.mappings_version}:v2"
+    modCompile "net.fabricmc:fabric-loader:${config.fabric_loader_version}"
+    compile "com.google.code.findbugs:jsr305:3.0.2"
+
+    //modCompile "io.github.prospector:modmenu:${config.mod_menu_version}"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    //modCompile "net.fabricmc:fabric:" + config.fabric_version
+}
+
 minecraft {
-    //mappings channel: 'snapshot', version: '20191019-1.14.3'
-    mappings = config.mappings_version
-
-    //makeObfSourceJar = false
-
     ext.mod_version = config.mod_version
 
     if (mod_version.endsWith('-dev')) {
         mod_version = mod_version + "." + new Date().format('yyyyMMdd.HHmmss')
     }
-
-    //replaceIn "MaLiLibReference.java"
-    //replace "@MOD_VERSION@", mod_version
-}
-
-dependencies {
-    minecraft 'net.minecraftforge:forge:' + config.minecraft_version + '-' + config.forge_version
 }
 
 compileJava {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
     options.encoding = 'UTF-8'
 }
 
-/*
-sourceSets {
-    main {
-        ext.refMap = 'mixins.' + config.mod_id + '.refmap.json'
-    }
-}
-*/
-
-group = config.group + "." + config.mod_id // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = config.group + "." + config.mod_id
 archivesBaseName = config.mod_file_name + '-' + config.minecraft_version_out
 version = project.minecraft.mod_version
-
-/**
- * This section allows you to customise your generated jar (litemod) file. By
- * default it includes the generated litemod.json file, however if you prefer to
- * include your own file from resources, simply remove the line below.
- */
-jar {
-    // Remove the "-mc1.12" suffix from the file name
-    //classifier = ""
-    // Don't append a 'mod-' filename prefix >_>
-    baseName = archivesBaseName
-
-    manifest {
-        attributes([
-            "Specification-Title": "${config.mod_id}",
-            "Specification-Vendor": "${config.author}",
-            "Specification-Version": "1", // We are version 1 of ourselves
-            "Implementation-Title": "${config.mod_name}",
-            "Implementation-Version": "${config.mod_version}",
-            "Implementation-Vendor": "${config.author}",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-}
-
-/*
-mixin {
-    defaultObfuscationEnv notch
-    add sourceSets.main, 'mixins.' + config.mod_id + '.refmap.json'
-}
-*/
 
 processResources
 {
@@ -100,19 +61,24 @@ processResources
     exclude '**/xcf'
 
     // this will ensure that this task is redone when the versions change.
-    inputs.property "mod_version", project.minecraft.mod_version
-    inputs.property "minecraft_version", project.config.minecraft_version
+    //inputs.property "mod_version", project.minecraft.mod_version
+    //inputs.property "minecraft_version", project.config.minecraft_version
 
-    // replace stuff in mcmod.info, nothing else
+    inputs.property "mod_version", project.minecraft.mod_version
+
     from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        // replace version and mcversion
-        expand 'mod_version': project.minecraft.mod_version, 'minecraft_version': project.config.minecraft_version
+        include "fabric.mod.json"
+        expand "mod_version": project.minecraft.mod_version
     }
-      
-    // copy everything else, thats not the mcmod.info
+
     from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+        exclude "fabric.mod.json"
     }
+}
+
+// ensure that the encoding is set to UTF-8, no matter what the system default is
+// this fixes some edge cases with special characters not displaying correctly
+// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
 }

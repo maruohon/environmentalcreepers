@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "fi.dy.masa.environmentalcreepers.mixin",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinCommandManager",
+    "MixinCreeperEntity",
+    "MixinExplosion",
+    "MixinMinecraftServer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

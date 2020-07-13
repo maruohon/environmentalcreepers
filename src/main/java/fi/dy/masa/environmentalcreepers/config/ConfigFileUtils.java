@@ -6,7 +6,7 @@ import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 
 public class ConfigFileUtils
 {
-    public static void createDirIfNotExists(File dir)
+    public static void createDirIfMissing(File dir)
     {
         if (dir.exists() == false)
         {
@@ -21,7 +21,7 @@ public class ConfigFileUtils
         }
     }
 
-    public static void tryCopyConfigIfMissing(File fileToReplace, File replacementFile)
+    public static void copyFileIfMissing(File replacementFile, File fileToReplace)
     {
         if (replacementFile.exists() &&
             replacementFile.isFile() &&

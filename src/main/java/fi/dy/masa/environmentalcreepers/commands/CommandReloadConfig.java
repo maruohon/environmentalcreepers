@@ -3,29 +3,28 @@ package fi.dy.masa.environmentalcreepers.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.Commands;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.LiteralText;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 
 public class CommandReloadConfig
 {
-    private static final SimpleCommandExceptionType FAILED_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent("Environmental Creepers: failed to reload the config!"));
+    private static final SimpleCommandExceptionType FAILED_EXCEPTION = new SimpleCommandExceptionType(new LiteralText("Environmental Creepers: failed to reload the config!"));
 
-    public static void register(CommandDispatcher<CommandSource> dispatcher)
+    public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
         dispatcher.register(
-                Commands.literal("environmentalcreepers-reload")
+                CommandManager.literal("environmentalcreepers-reload")
                     .requires((src) -> src.hasPermissionLevel(4))
                     .executes((src) -> reloadConfig(src.getSource())));
      }
 
-     private static int reloadConfig(CommandSource source) throws CommandSyntaxException
+     private static int reloadConfig(ServerCommandSource source) throws CommandSyntaxException
      {
          if (Configs.reloadConfig())
          {
-             source.sendFeedback(new StringTextComponent("Environmental Creepers config reloaded"), true);
+             source.sendFeedback(new LiteralText("Environmental Creepers config reloaded"), true);
              return 0;
          }
 
