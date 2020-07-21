@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -13,7 +14,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -39,8 +39,8 @@ public class EnvironmentalCreepers
         ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (incoming, isNetwork) -> true));
 
         MinecraftForge.EVENT_BUS.register(new ExplosionEventHandler());
+        MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         MinecraftForge.EVENT_BUS.addListener(this::onServerAboutToStart);
-        MinecraftForge.EVENT_BUS.addListener(this::onServerStarting);
         MinecraftForge.EVENT_BUS.addListener(this::serverStopping);
 
         Configs.loadConfig(FMLPaths.CONFIGDIR.get().resolve(Reference.MOD_ID + ".toml"));
@@ -75,9 +75,9 @@ public class EnvironmentalCreepers
         Configs.loadConfigsFromPerWorldConfigIfExists(dataDir);
     }
 
-    private void onServerStarting(final FMLServerStartingEvent event)
+    private void onRegisterCommands(final RegisterCommandsEvent event)
     {
-        CommandReloadConfig.register(event.getCommandDispatcher());
+        CommandReloadConfig.register(event.getDispatcher());
     }
 
     private void serverStopping(final FMLServerStoppingEvent event)
