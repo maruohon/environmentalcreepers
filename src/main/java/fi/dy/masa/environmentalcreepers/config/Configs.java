@@ -11,21 +11,21 @@ import com.electronwill.nightconfig.core.io.WritingMode;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.entity.Entity;
 import net.minecraft.world.Explosion;
-import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
-import fi.dy.masa.environmentalcreepers.Reference;
-import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
+import fi.dy.masa.environmentalcreepers.Reference;
+import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
 
 @Mod.EventBusSubscriber
 public class Configs
 {
-    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_BLACKLIST = new HashSet<Class<? extends Explosion>>();
-    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_WHITELIST = new HashSet<Class<? extends Explosion>>();
-    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_BLACKLIST = new HashSet<Class<? extends Entity>>();
-    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_WHITELIST = new HashSet<Class<? extends Entity>>();
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_BLACKLIST = new HashSet<>();
+    public static final HashSet<Class<? extends Explosion>> EXPLOSION_CLASS_WHITELIST = new HashSet<>();
+    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_BLACKLIST = new HashSet<>();
+    public static final HashSet<Class<? extends Entity>> EXPLOSION_ENTITY_WHITELIST = new HashSet<>();
 
     public static final String CATEGORY_GENERIC = "Generic";
     public static final String CATEGORY_LISTS = "Lists";
@@ -259,11 +259,11 @@ public class Configs
 
                 if (type == boolean.class)
                 {
-                    field.set(null, spec.getValues().<ForgeConfigSpec.BooleanValue>get(category + "." + name).get().booleanValue());
+                    field.set(null, spec.getValues().<ForgeConfigSpec.BooleanValue>get(category + "." + name).get());
                 }
                 else if (type == double.class)
                 {
-                    field.set(null, spec.getValues().<ForgeConfigSpec.DoubleValue>get(category + "." + name).get().doubleValue());
+                    field.set(null, spec.getValues().<ForgeConfigSpec.DoubleValue>get(category + "." + name).get());
                 }
                 else if (type == String.class)
                 {
@@ -343,8 +343,7 @@ public class Configs
 
     public static void setGlobalConfigDirAndLoadConfigs(File configDirCommon)
     {
-        File configFile = new File(configDirCommon, Reference.MOD_ID + ".toml");
-        configFileGlobal = configFile;
+        configFileGlobal = new File(configDirCommon, Reference.MOD_ID + ".toml");
 
         loadConfigsFromGlobalConfigFile();
     }
@@ -442,7 +441,7 @@ public class Configs
         }
     }
 
-    public static enum ListType
+    public enum ListType
     {
         NONE        ("none"),
         BLACKLIST   ("blacklist"),

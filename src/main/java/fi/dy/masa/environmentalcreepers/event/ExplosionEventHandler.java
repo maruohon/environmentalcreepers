@@ -292,7 +292,7 @@ public class ExplosionEventHandler
 
                             LootContext.Builder builder = (new LootContext.Builder(serverWorld))
                                     .withRandom(rand)
-                                    .withParameter(LootParameters.POSITION, pos)
+                                    .withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(pos))
                                     .withParameter(LootParameters.TOOL, ItemStack.EMPTY)
                                     .withNullableParameter(LootParameters.BLOCK_ENTITY, te)
                                     .withNullableParameter(LootParameters.THIS_ENTITY, exploder);
@@ -357,9 +357,9 @@ public class ExplosionEventHandler
             Pair<ItemStack, BlockPos> pair = drops.get(i);
             ItemStack stackTmp = pair.getFirst();
 
-            if (ItemEntity.func_226532_a_(stackTmp, stack)) // canMerge
+            if (ItemEntity.canMergeStacks(stackTmp, stack))
             {
-                ItemStack stackNew = ItemEntity.func_226533_a_(stackTmp, stack, 16); // mergeToFirstStackUpTo
+                ItemStack stackNew = ItemEntity.mergeStacks(stackTmp, stack, 16);
                 drops.set(i, Pair.of(stackNew, pair.getSecond()));
 
                 if (stack.isEmpty())
