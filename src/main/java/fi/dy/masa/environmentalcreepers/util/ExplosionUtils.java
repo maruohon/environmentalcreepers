@@ -1,6 +1,7 @@
 package fi.dy.masa.environmentalcreepers.util;
 
 import java.util.List;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -19,7 +20,7 @@ public class ExplosionUtils
         Box bb = new Box(
                 explosionPos.x - r, explosionPos.y - r, explosionPos.z - r,
                 explosionPos.x + r, explosionPos.y + r, explosionPos.z + r);
-        List<CreeperEntity> list = world.getEntities(CreeperEntity.class, bb, (ent) -> ent.getHealth() > 0);
+        List<CreeperEntity> list = world.getEntitiesByType(EntityType.CREEPER, bb, (ent) -> ent.getHealth() > 0);
 
         for (CreeperEntity creeper : list)
         {
@@ -27,7 +28,7 @@ public class ExplosionUtils
                 creeper.squaredDistanceTo(explosionPos.x, explosionPos.y, explosionPos.z) <= rSq)
             {
                 EnvironmentalCreepers.logInfo("ExplosionUtils.causeCreeperChainReaction() - Igniting Creeper: '{}'", creeper.toString());
-                creeper.setIgnited();
+                creeper.ignite();
             }
         }
     }

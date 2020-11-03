@@ -18,16 +18,16 @@ public class CommandReloadConfig
                 CommandManager.literal("environmentalcreepers-reload")
                     .requires((src) -> src.hasPermissionLevel(4))
                     .executes((src) -> reloadConfig(src.getSource())));
-     }
+    }
 
-     private static int reloadConfig(ServerCommandSource source) throws CommandSyntaxException
-     {
-         if (Configs.reloadConfig())
-         {
-             source.sendFeedback(new LiteralText("Environmental Creepers config reloaded"), true);
-             return 0;
-         }
+    private static int reloadConfig(ServerCommandSource source) throws CommandSyntaxException
+    {
+        if (Configs.reloadConfig())
+        {
+            source.sendFeedback(new LiteralText("Environmental Creepers config reloaded"), true);
+            return 0;
+        }
 
-         throw FAILED_EXCEPTION.create();
-     }
+        throw FAILED_EXCEPTION.create();
+    }
 }
