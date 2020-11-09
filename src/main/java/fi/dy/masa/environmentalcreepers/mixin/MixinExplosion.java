@@ -48,7 +48,7 @@ public class MixinExplosion
     {
         if (entity instanceof CreeperEntity && Configs.Toggles.MODIFY_CREEPER_EXPLOSION_STRENGTH.getValue())
         {
-            if (((CreeperEntity) entity).shouldRenderOverlay())
+            if (entity.getDataTracker().get(IMixinCreeperEntity.envc_getCharged()))
             {
                 this.power = Configs.Generic.CREEPER_EXPLOSION_STRENGTH_CHARGED.getFloatValue();
             }
