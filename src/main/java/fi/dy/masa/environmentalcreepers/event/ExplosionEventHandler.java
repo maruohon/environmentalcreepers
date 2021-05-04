@@ -21,6 +21,7 @@ import net.minecraft.loot.LootParameters;
 import net.minecraft.network.play.server.SExplosionPacket;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -276,7 +277,7 @@ public class ExplosionEventHandler
             {
                 BlockState state = world.getBlockState(pos);
 
-                if (state.isAir(world, pos) == false)
+                if (state.getBlock().isAir(state, world, pos) == false)
                 {
                     world.getProfiler().startSection("explosion_blocks");
 
@@ -292,7 +293,7 @@ public class ExplosionEventHandler
 
                             LootContext.Builder builder = (new LootContext.Builder(serverWorld))
                                     .withRandom(rand)
-                                    .withParameter(LootParameters.field_237457_g_, Vector3d.copyCentered(pos))
+                                    .withParameter(LootParameters.ORIGIN, Vector3d.copyCentered(pos))
                                     .withParameter(LootParameters.TOOL, ItemStack.EMPTY)
                                     .withNullableParameter(LootParameters.BLOCK_ENTITY, te)
                                     .withNullableParameter(LootParameters.THIS_ENTITY, exploder);
@@ -321,13 +322,21 @@ public class ExplosionEventHandler
 
         if (causesFire)
         {
+            BlockPos.Mutable posMutable = new BlockPos.Mutable();
+
             for (BlockPos pos : explosion.getAffectedBlockPositions())
             {
-                if (world.getBlockState(pos).isAir(world, pos) &&
-                    world.getBlockState(pos.down()).isOpaqueCube(world, pos.down()) &&
-                    rand.nextInt(3) == 0)
+                BlockState state = world.getBlockState(pos);
+
+                if (state.getBlock().isAir(state, world, pos))
                 {
-                    world.setBlockState(pos, Blocks.FIRE.getDefaultState());
+                    posMutable.setAndMove(pos, Direction.DOWN);
+
+                    if (world.getBlockState(posMutable).isOpaqueCube(world, posMutable) &&
+                        rand.nextInt(3) == 0)
+                    {
+                        world.setBlockState(pos, Blocks.FIRE.getDefaultState());
+                    }
                 }
             }
         }

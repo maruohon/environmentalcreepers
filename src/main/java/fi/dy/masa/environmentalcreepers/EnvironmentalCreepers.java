@@ -12,7 +12,6 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -32,7 +31,6 @@ public class EnvironmentalCreepers
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Configs.COMMON_CONFIG, Reference.MOD_ID + ".toml");
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onFingerPrintViolation);
 
         // Make sure the mod being absent on the other network side does not cause
         // the client to display the server as incompatible
@@ -49,24 +47,6 @@ public class EnvironmentalCreepers
     private void onCommonSetup(final FMLCommonSetupEvent event)
     {
         Configs.setGlobalConfigDirAndLoadConfigs(FMLPaths.CONFIGDIR.get().toFile());
-    }
-
-    private void onFingerPrintViolation(final FMLFingerprintViolationEvent event)
-    {
-        // Not running in a dev environment
-        if (event.isDirectory() == false)
-        {
-            logger.warn("*********************************************************************************************");
-            logger.warn("*****                                    WARNING                                        *****");
-            logger.warn("*****                                                                                   *****");
-            logger.warn("*****   The signature of the mod file '{}' does not match the expected fingerprint!     *****", event.getSource().getName());
-            logger.warn("*****   This might mean that the mod file has been tampered with!                       *****");
-            logger.warn("*****   If you did not download the mod {} directly from Curse/CurseForge,       *****", Reference.MOD_NAME);
-            logger.warn("*****   or using one of the well known launchers, and you did not                       *****");
-            logger.warn("*****   modify the mod file at all yourself, then it's possible,                        *****");
-            logger.warn("*****   that it may contain malware or other unwanted things!                           *****");
-            logger.warn("*********************************************************************************************");
-        }
     }
 
     private void onServerAboutToStart(final FMLServerAboutToStartEvent event)
