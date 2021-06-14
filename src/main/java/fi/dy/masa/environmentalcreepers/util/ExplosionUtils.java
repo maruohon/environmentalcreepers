@@ -24,7 +24,7 @@ public class ExplosionUtils
 
         for (CreeperEntity creeper : list)
         {
-            if (creeper.getIgnited() == false && world.random.nextFloat() < Configs.Generic.CREEPER_CHAIN_REACTION_CHANCE.getValue() &&
+            if (creeper.isIgnited() == false && world.random.nextFloat() < Configs.Generic.CREEPER_CHAIN_REACTION_CHANCE.getValue() &&
                 creeper.squaredDistanceTo(explosionPos.x, explosionPos.y, explosionPos.z) <= rSq)
             {
                 EnvironmentalCreepers.logInfo("ExplosionUtils.causeCreeperChainReaction() - Igniting Creeper: '{}'", creeper.toString());

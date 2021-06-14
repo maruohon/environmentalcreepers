@@ -2,7 +2,7 @@
   "required": true,
   "package": "fi.dy.masa.environmentalcreepers.mixin",
   "minVersion": "0.7",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "mixins": [
     "IMixinCreeperEntity",
     "MixinCommandManager",
