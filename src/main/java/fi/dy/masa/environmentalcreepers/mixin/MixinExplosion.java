@@ -82,12 +82,7 @@ public class MixinExplosion
             EnvironmentalCreepers.logInfo("MixinExplosion.disableExplosionCompletely2(), type: '{}'", (this.entity instanceof CreeperEntity) ? "Creeper" : "Other");
             ci.cancel();
         }
-    }
-
-    @Inject(method = "affectWorld", at = @At("HEAD"), cancellable = true)
-    private void disableExplosionBlockDamage(CallbackInfo ci)
-    {
-        if (this.entity instanceof CreeperEntity)
+        else if (this.entity instanceof CreeperEntity)
         {
             if (Configs.Toggles.DISABLE_CREEPER_EXPLOSION_BLOCK_DAMAGE.getValue() ||
                 (Configs.Toggles.CREEPER_ALTITUDE_CONDITION.getValue() &&
