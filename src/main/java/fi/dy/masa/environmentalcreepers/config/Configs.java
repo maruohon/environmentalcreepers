@@ -202,7 +202,7 @@ public class Configs
                                " list of entities to be damaged by the explosion, allowing these\n" +
                                " entities to handle the explosion code themselves.\n" +
                                " Used if entityClassListType = blacklist")
-                      .defineList("entityBlacklistClassNames", ImmutableList.of("appeng.entity.EntitySingularity"), (val) -> true);
+                      .defineList("entityBlacklistClassNames", ImmutableList.of("appeng.entity.SingularityEntity"), (val) -> true);
 
         COMMON_BUILDER.comment(" A list of full class names of entities that are the only ones\n" +
                                " that should be acted on, see the comment on entityTypeBlacklist.\n" +
