@@ -4,6 +4,7 @@ buildscript {
             name = "Fabric"
             url = "https://maven.fabricmc.net/"
         }
+        mavenCentral()
     }
     dependencies {
         classpath 'net.fabricmc:fabric-loom:0.7-SNAPSHOT'
