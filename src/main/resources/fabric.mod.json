@@ -1,33 +1,35 @@
 {
-    "schemaVersion": 1,
-    "id": "environmentalcreepers",
-    "name": "Environmental Creepers",
-    "version": "${mod_version}",
+	"schemaVersion": 1,
+	"id": "environmentalcreepers",
+	"name": "Environmental Creepers",
+	"version": "${mod_version}",
 
-    "description": "Allows tweaking Creeper (and other) explosion properties",
-    "authors": [
-        "masa"
-    ],
-    "contact": {
-        "homepage": "https://www.curseforge.com/minecraft/mc-mods/environmental-creepers",
-        "issues": "https://github.com/maruohon/environmentalcreepers/issues",
-        "sources": "https://github.com/maruohon/environmentalcreepers",
-        "twitter": "https://twitter.com/maruohon",
-        "discord": "https://discordapp.com/channels/211786369951989762/453662800460644354/"
-    },
+	"description": "Allows tweaking Creeper (and other) explosion properties",
+	"authors": [
+		"masa"
+	],
+	"contact": {
+		"homepage": "https://www.curseforge.com/minecraft/mc-mods/environmental-creepers",
+		"issues": "https://github.com/maruohon/environmentalcreepers/issues",
+		"sources": "https://github.com/maruohon/environmentalcreepers",
+		"twitter": "https://twitter.com/maruohon",
+		"discord": "https://discordapp.com/channels/211786369951989762/453662800460644354/"
+	},
 
-    "license": "LGPLv3",
+	"license": "LGPLv3",
 
-    "environment": "*",
-    "entrypoints": {
-        "main": [
-            "fi.dy.masa.environmentalcreepers.EnvironmentalCreepers"
-        ]
-    },
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"fi.dy.masa.environmentalcreepers.EnvironmentalCreepers"
+		]
+	},
 
-    "mixins": [
-        "mixins.environmentalcreepers.json"
-    ],
+	"mixins": [
+		"mixins.environmentalcreepers.json"
+	],
 
-    "depends": {}
+	"depends": {
+		"minecraft": ">=1.16.4"
+	}
 }

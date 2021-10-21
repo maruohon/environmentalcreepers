@@ -1,16 +1,16 @@
 {
-  "required": true,
-  "package": "fi.dy.masa.environmentalcreepers.mixin",
-  "minVersion": "0.7",
-  "compatibilityLevel": "JAVA_16",
-  "mixins": [
-    "IMixinCreeperEntity",
-    "MixinCommandManager",
-    "MixinCreeperEntity",
-    "MixinExplosion",
-    "MixinMinecraftServer"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+	"required": true,
+	"package": "fi.dy.masa.environmentalcreepers.mixin",
+	"minVersion": "0.8",
+	"compatibilityLevel": "JAVA_16",
+	"mixins": [
+		"IMixinCreeperEntity",
+		"MixinCommandManager",
+		"MixinCreeperEntity",
+		"MixinExplosion",
+		"MixinMinecraftServer"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
 }
