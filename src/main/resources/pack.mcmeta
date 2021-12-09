@@ -1,6 +1,7 @@
 {
-   "pack": {
-      "pack_format": 7,
-      "description": "MaLiLib"
-   }
+	 "pack":
+	 {
+			"pack_format": 7,
+			"description": "MaLiLib"
+	 }
 }
