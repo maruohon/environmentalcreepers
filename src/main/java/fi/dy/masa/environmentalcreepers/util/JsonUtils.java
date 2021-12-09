@@ -43,15 +43,9 @@ public class JsonUtils
         {
             String fileName = file.getAbsolutePath();
 
-            try
+            try (FileReader reader = new FileReader(file))
             {
-                JsonParser parser = new JsonParser();
-                FileReader reader = new FileReader(file);
-
-                JsonElement element = parser.parse(reader);
-                reader.close();
-
-                return element;
+                return JsonParser.parseReader(reader);
             }
             catch (Exception e)
             {
