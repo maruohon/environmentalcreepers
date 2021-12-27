@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -13,8 +15,6 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fmlserverevents.FMLServerAboutToStartEvent;
-import net.minecraftforge.fmlserverevents.FMLServerStoppingEvent;
 import fi.dy.masa.environmentalcreepers.commands.CommandReloadConfig;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.event.ExplosionEventHandler;
@@ -47,7 +47,7 @@ public class EnvironmentalCreepers
         Configs.setGlobalConfigDirAndLoadConfigs(FMLPaths.CONFIGDIR.get().toFile());
     }
 
-    private void onServerAboutToStart(final FMLServerAboutToStartEvent event)
+    private void onServerAboutToStart(final ServerAboutToStartEvent event)
     {
         File dataDir = event.getServer().getWorldPath(new LevelResource(Reference.MOD_ID)).toFile();
         Configs.loadConfigsFromPerWorldConfigIfExists(dataDir);
@@ -58,7 +58,7 @@ public class EnvironmentalCreepers
         CommandReloadConfig.register(event.getDispatcher());
     }
 
-    private void serverStopping(final FMLServerStoppingEvent event)
+    private void serverStopping(final ServerStoppingEvent event)
     {
         // (Re-)read the global configs after closing a world
         Configs.loadConfigsFromGlobalConfigFile();
