@@ -9,12 +9,12 @@ import javax.annotation.Nullable;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import com.google.common.collect.ImmutableList;
-import net.minecraft.entity.Entity;
-import net.minecraft.world.Explosion;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Explosion;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.Reference;
 import fi.dy.masa.environmentalcreepers.event.CreeperEventHandler;
@@ -237,11 +237,11 @@ public class Configs
 
         if (Toggles.disableCreeperExplosionCompletely)
         {
-            CreeperEventHandler.getInstance().register();
+            CreeperEventHandler.INSTANCE.register();
         }
         else
         {
-            CreeperEventHandler.getInstance().unregister();
+            CreeperEventHandler.INSTANCE.unregister();
         }
     }
 
@@ -309,14 +309,14 @@ public class Configs
     }
 
     @SubscribeEvent
-    public static void onConfigLoad(final ModConfig.Loading event)
+    public static void onConfigLoad(final ModConfigEvent.Loading event)
     {
         //System.out.printf("*** ModConfig.Loading\n");
         setConfigValues(COMMON_CONFIG);
     }
 
     @SubscribeEvent
-    public static void onConfigReload(final ModConfig.Reloading event)
+    public static void onConfigReload(final ModConfigEvent.Reloading event)
     {
         //System.out.printf("*** ModConfig.ConfigReloading\n");
         setConfigValues(COMMON_CONFIG);

@@ -12,12 +12,16 @@ public class ConfigFileUtils
         {
             try
             {
-                dir.mkdirs();
+                if (dir.mkdirs() == false)
+                {
+                    EnvironmentalCreepers.logger.warn("Failed to create the directory '{}'", dir.getAbsolutePath());
+                }
             }
             catch (Exception e)
             {
                 EnvironmentalCreepers.logger.warn("Failed to create the directory '{}'", dir.getAbsolutePath(), e);
             }
+
         }
     }
 

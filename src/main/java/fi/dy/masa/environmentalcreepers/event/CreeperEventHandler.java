@@ -1,25 +1,22 @@
 package fi.dy.masa.environmentalcreepers.event;
 
 import java.lang.reflect.Field;
-import net.minecraft.entity.monster.CreeperEntity;
-import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
-import fi.dy.masa.environmentalcreepers.config.Configs;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
+import fi.dy.masa.environmentalcreepers.config.Configs;
 
 public class CreeperEventHandler
 {
-    private static final Field field_Creeper_timeSinceIgnited = ObfuscationReflectionHelper.findField(CreeperEntity.class, "field_70833_d"); // timeSinceIgnited
-    private static final Field field_Creeper_fuseTime = ObfuscationReflectionHelper.findField(CreeperEntity.class, "field_82225_f"); // fuseTime
-    private static CreeperEventHandler instance = new CreeperEventHandler();
-    private boolean registered;
+    private static final Field field_Creeper_timeSinceIgnited = ObfuscationReflectionHelper.findField(Creeper.class, "f_32270_"); // swell (mcp: timeSinceIgnited)
+    private static final Field field_Creeper_fuseTime = ObfuscationReflectionHelper.findField(Creeper.class, "f_32271_"); // maxSwell (mcp: fuseTime)
 
-    public static CreeperEventHandler getInstance()
-    {
-        return instance;
-    }
+    public static final CreeperEventHandler INSTANCE = new CreeperEventHandler();
+
+    private boolean registered;
 
     public void register()
     {
@@ -44,10 +41,10 @@ public class CreeperEventHandler
     @SubscribeEvent
     public void onLivingUpdate(LivingUpdateEvent event)
     {
-        if (Configs.Toggles.disableCreeperExplosionCompletely && event.getEntity() instanceof CreeperEntity)
+        if (Configs.Toggles.disableCreeperExplosionCompletely &&
+            event.getEntity() instanceof Creeper creeper)
         {
-            CreeperEntity creeper = (CreeperEntity) event.getEntity();
-            int state = creeper.getCreeperState();
+            int state = creeper.getSwellDir();
 
             if (state > 0)
             {
