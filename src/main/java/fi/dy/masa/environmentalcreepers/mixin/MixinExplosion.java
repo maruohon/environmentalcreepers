@@ -18,6 +18,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.loot.context.LootContext;
@@ -33,7 +34,7 @@ import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.util.ExplosionUtils;
 
 @Mixin(Explosion.class)
-public class MixinExplosion
+public abstract class MixinExplosion
 {
     @Shadow @Final private World world;
     @Shadow @Final private Entity entity;
@@ -42,6 +43,8 @@ public class MixinExplosion
     @Shadow @Final private double y;
     @Shadow @Final private double z;
     @Shadow @Final @Mutable private float power;
+
+    @Shadow @org.jetbrains.annotations.Nullable public abstract LivingEntity getCausingEntity();
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/damage/DamageSource;Lnet/minecraft/world/explosion/ExplosionBehavior;DDDFZLnet/minecraft/world/explosion/Explosion$DestructionType;)V",
             at = @At("RETURN"))
@@ -67,12 +70,12 @@ public class MixinExplosion
     {
         if (this.world.isClient == false)
         {
-            EnvironmentalCreepers.logInfo(this::envc_printExplosionPosition);
+            EnvironmentalCreepers.logInfo(this::envc_printExplosionInfo);
         }
 
         if (Configs.Toggles.DISABLE_ALL_EXPLOSIONS.getValue())
         {
-            EnvironmentalCreepers.logInfo("MixinExplosion.disableExplosionCompletely2(), type: '{}'", (this.entity instanceof CreeperEntity) ? "Creeper" : "Other");
+            EnvironmentalCreepers.logInfo("MixinExplosion.envc_disableExplosionBlockDamageOrCompletely(), type: '{}'", (this.entity instanceof CreeperEntity) ? "Creeper" : "Other");
             ci.cancel();
         }
         else if (this.entity instanceof CreeperEntity)
@@ -82,7 +85,7 @@ public class MixinExplosion
                 (this.y < Configs.Generic.CREEPER_ALTITUDE_DAMAGE_MIN_Y.getValue() ||
                  this.y > Configs.Generic.CREEPER_ALTITUDE_DAMAGE_MAX_Y.getValue())))
             {
-                EnvironmentalCreepers.logInfo("MixinExplosion: clearAffectedBlockPositions(), type: 'Creeper'");
+                EnvironmentalCreepers.logInfo("MixinExplosion.envc_disableExplosionBlockDamageOrCompletely: clearAffectedBlockPositions(), type: 'Creeper'");
                 this.affectedBlocks.clear();
             }
 
@@ -93,7 +96,7 @@ public class MixinExplosion
         }
         else if (Configs.Toggles.DISABLE_OTHER_EXPLOSION_BLOCK_DAMAGE.getValue() && (this.entity instanceof CreeperEntity) == false)
         {
-            EnvironmentalCreepers.logInfo("MixinExplosion: clearAffectedBlockPositions(), type: 'Other'");
+            EnvironmentalCreepers.logInfo("MixinExplosion.envc_disableExplosionBlockDamageOrCompletely: clearAffectedBlockPositions(), type: 'Other'");
             this.affectedBlocks.clear();
         }
     }
@@ -257,8 +260,12 @@ public class MixinExplosion
         this.affectedBlocks.clear();
     }
 
-    private String envc_printExplosionPosition()
+    private String envc_printExplosionInfo()
     {
-        return String.format("Explosion.affectWorld() @ [%.5f, %.5f, %.5f], power: %.2f - type: '%s'", this.x, this.y, this.z, this.power, (this.entity instanceof CreeperEntity) ? "Creeper" : "Other");
+        return String.format("Explosion @ [%.5f, %.5f, %.5f], power: %.2f - type: '%s' - explosion class: '%s', placer: '%s'",
+                             this.x, this.y, this.z, this.power,
+                             (this.entity instanceof CreeperEntity) ? "Creeper" : "Other",
+                             this.getClass().getName(),
+                             this.getCausingEntity() != null ? this.getCausingEntity().getClass().getName() : "<null>");
     }
 }
