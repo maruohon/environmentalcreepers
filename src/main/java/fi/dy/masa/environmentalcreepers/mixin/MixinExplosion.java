@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -38,7 +39,7 @@ public abstract class MixinExplosion
 {
     @Shadow @Final private World world;
     @Shadow @Final private Entity entity;
-    @Shadow @Final private List<BlockPos> affectedBlocks;
+    @Shadow @Final private ObjectArrayList<BlockPos> affectedBlocks;
     @Shadow @Final private double x;
     @Shadow @Final private double y;
     @Shadow @Final private double z;
@@ -102,7 +103,7 @@ public abstract class MixinExplosion
     }
 
     @Inject(method = "affectWorld", at = @At(value = "INVOKE",
-            target = "Ljava/util/Collections;shuffle(Ljava/util/List;Ljava/util/Random;)V"))
+            target = "Lnet/minecraft/util/Util;shuffle(Lit/unimi/dsi/fastutil/objects/ObjectArrayList;Lnet/minecraft/util/math/random/Random;)V"))
     private void envc_preventItemDrops(boolean particles, CallbackInfo ci)
     {
         if (this.entity instanceof CreeperEntity)

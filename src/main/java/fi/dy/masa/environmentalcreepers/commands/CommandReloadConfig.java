@@ -5,12 +5,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 
 public class CommandReloadConfig
 {
-    private static final SimpleCommandExceptionType FAILED_EXCEPTION = new SimpleCommandExceptionType(new LiteralText("Environmental Creepers: failed to reload the config!"));
+    private static final SimpleCommandExceptionType FAILED_EXCEPTION = new SimpleCommandExceptionType(Text.literal("Environmental Creepers: failed to reload the config!"));
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
@@ -24,7 +24,7 @@ public class CommandReloadConfig
     {
         if (Configs.reloadConfig())
         {
-            source.sendFeedback(new LiteralText("Environmental Creepers config reloaded"), true);
+            source.sendFeedback(Text.literal("Environmental Creepers config reloaded"), true);
             return 0;
         }
 
