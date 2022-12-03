@@ -3,7 +3,7 @@ package fi.dy.masa.environmentalcreepers.event;
 import java.lang.reflect.Field;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
@@ -39,7 +39,7 @@ public class CreeperEventHandler
     }
 
     @SubscribeEvent
-    public void onLivingUpdate(LivingUpdateEvent event)
+    public void onLivingUpdate(LivingTickEvent event)
     {
         if (Configs.Toggles.disableCreeperExplosionCompletely &&
             event.getEntity() instanceof Creeper creeper)

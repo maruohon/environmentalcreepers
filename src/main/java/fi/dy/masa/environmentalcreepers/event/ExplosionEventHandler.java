@@ -1,12 +1,12 @@
 package fi.dy.masa.environmentalcreepers.event;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import javax.annotation.Nullable;
 import com.mojang.datafixers.util.Pair;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Creeper;
@@ -29,13 +30,13 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.world.ExplosionEvent;
+import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.config.Configs.ListType;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 public class ExplosionEventHandler
 {
@@ -119,7 +120,7 @@ public class ExplosionEventHandler
 
             if (Configs.Toggles.enableCreeperExplosionChainReaction)
             {
-                this.causeCreeperChainReaction(event.getWorld(), explosion.getPosition());
+                this.causeCreeperChainReaction(event.getLevel(), explosion.getPosition());
             }
         }
         else
@@ -161,7 +162,7 @@ public class ExplosionEventHandler
 
     private void replaceExplosion(ExplosionEvent.Start event, boolean isCreeper)
     {
-        Level world = event.getWorld();
+        Level world = event.getLevel();
         Explosion explosion = event.getExplosion();
 
         if (Configs.Generic.verboseLogging)
@@ -243,7 +244,7 @@ public class ExplosionEventHandler
     private void finalizeExplosion(Level world, Explosion explosion, Explosion.BlockInteraction mode, boolean spawnParticles, boolean causesFire, float explosionSize, boolean isCreeper)
     {
         Vec3 posVec = explosion.getPosition();
-        Random rand = world.random;
+        RandomSource rand = world.random;
         boolean breaksBlock = mode != Explosion.BlockInteraction.NONE &&
                 (isCreeper ? Configs.Toggles.disableCreeperExplosionBlockDamage == false :
                              Configs.Toggles.disableOtherExplosionBlockDamage == false);
@@ -268,7 +269,7 @@ public class ExplosionEventHandler
         if (breaksBlock)
         {
             ObjectArrayList<Pair<ItemStack, BlockPos>> drops = new ObjectArrayList<>();
-            Collections.shuffle(explosion.getToBlow(), world.random);
+            shuffle(explosion.getToBlow(), world.random);
 
             for (BlockPos pos : explosion.getToBlow())
             {
@@ -391,5 +392,16 @@ public class ExplosionEventHandler
                 creeper.ignite();
             }
         }
+    }
+
+    private static <T> void shuffle(List<T> list, RandomSource rand) {
+        int i = list.size();
+
+        for (int j = i; j > 1; --j)
+        {
+            int k = rand.nextInt(j);
+            list.set(j - 1, list.set(k, list.get(j - 1)));
+        }
+
     }
 }
