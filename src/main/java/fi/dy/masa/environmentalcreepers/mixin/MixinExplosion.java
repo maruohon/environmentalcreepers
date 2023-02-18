@@ -125,7 +125,7 @@ public abstract class MixinExplosion
     }
 
     @Redirect(method = "affectWorld",
-              slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/explosion/Explosion$DestructionType;DESTROY:Lnet/minecraft/world/explosion/Explosion$DestructionType;")),
+              slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/explosion/Explosion$DestructionType;DESTROY_WITH_DECAY:Lnet/minecraft/world/explosion/Explosion$DestructionType;")),
               at = @At(value = "INVOKE",
               target = "Lnet/minecraft/loot/context/LootContext$Builder;parameter(Lnet/minecraft/loot/context/LootContextParameter;Ljava/lang/Object;)Lnet/minecraft/loot/context/LootContext$Builder;"))
     private <T> LootContext.Builder envc_modifyDropChance(LootContext.Builder builder, LootContextParameter<T> key, T value)
