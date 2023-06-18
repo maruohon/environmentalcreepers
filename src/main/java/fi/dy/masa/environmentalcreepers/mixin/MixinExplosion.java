@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
@@ -22,14 +23,15 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.CreeperEntity;
-import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameter;
+import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
 import net.minecraft.world.explosion.ExplosionBehavior;
+
 import fi.dy.masa.environmentalcreepers.EnvironmentalCreepers;
 import fi.dy.masa.environmentalcreepers.config.Configs;
 import fi.dy.masa.environmentalcreepers.util.ExplosionUtils;
@@ -124,11 +126,11 @@ public abstract class MixinExplosion
         }
     }
 
-    @Redirect(method = "affectWorld",
+    @Redirect(method = "affectWorld", allow = 1,
               slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/world/explosion/Explosion$DestructionType;DESTROY_WITH_DECAY:Lnet/minecraft/world/explosion/Explosion$DestructionType;")),
               at = @At(value = "INVOKE",
-              target = "Lnet/minecraft/loot/context/LootContext$Builder;parameter(Lnet/minecraft/loot/context/LootContextParameter;Ljava/lang/Object;)Lnet/minecraft/loot/context/LootContext$Builder;"))
-    private <T> LootContext.Builder envc_modifyDropChance(LootContext.Builder builder, LootContextParameter<T> key, T value)
+                       target = "Lnet/minecraft/loot/context/LootContextParameterSet$Builder;add(Lnet/minecraft/loot/context/LootContextParameter;Ljava/lang/Object;)Lnet/minecraft/loot/context/LootContextParameterSet$Builder;"))
+    private <T> LootContextParameterSet.Builder envc_modifyDropChance(LootContextParameterSet.Builder builder, LootContextParameter<T> key, T value)
     {
         if (this.entity instanceof CreeperEntity)
         {
@@ -140,7 +142,7 @@ public abstract class MixinExplosion
                 {
                     // See SurvivesExplosion loot condition
                     float size = 1.0f / dropChance;
-                    return builder.parameter(LootContextParameters.EXPLOSION_RADIUS, size);
+                    return builder.add(LootContextParameters.EXPLOSION_RADIUS, size);
                 }
             }
         }
@@ -154,7 +156,7 @@ public abstract class MixinExplosion
                 {
                     // See SurvivesExplosion loot condition
                     float size = 1.0f / dropChance;
-                    return builder.parameter(LootContextParameters.EXPLOSION_RADIUS, size);
+                    return builder.add(LootContextParameters.EXPLOSION_RADIUS, size);
                 }
             }
         }

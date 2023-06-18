@@ -24,7 +24,7 @@ public class CommandReloadConfig
     {
         if (Configs.reloadConfig())
         {
-            source.sendFeedback(Text.literal("Environmental Creepers config reloaded"), true);
+            source.sendFeedback(() -> Text.literal("Environmental Creepers config reloaded"), true);
             return 0;
         }
 
